@@ -1,0 +1,110 @@
+# Auth Service
+
+### Register
+POST http://localhost:8080/auth/register
+Content-Type: application/json
+
+{
+    "username": "user12",
+    "password": "12345678"
+}
+
+### Login
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+    "username": "test1",
+    "password": "test1234"
+}
+
+
+# User Service
+
+### Create Profile
+POST http://localhost:8080/users/profile
+Content-Type: application/json
+X-User-Id: 1
+
+{
+    "name": "test",
+    "address": "test",
+    "phone": "test"
+}
+
+### Get Profile
+GET http://localhost:8080/users/profile
+Content-Type: application/json
+X-User-Id: 1
+
+### Update Profile
+PUT http://localhost:8080/users/profile
+Content-Type: application/json
+X-User-Id: 1
+
+{
+    "name": "test1",
+    "address": "test1",
+    "phone": "test1"
+}
+
+## Product Service
+
+### Create Product
+POST http://localhost:8080/products
+Content-Type: application/json
+
+{
+    "name": "Macbook Pro 16",
+    "description": "Macbook Pro 16",
+    "price": 1299000,
+    "quantity": 1
+}
+
+### Get Product By Id
+GET http://localhost:8080/products/11
+Content-Type: application/json
+
+### Get All Products
+GET http://localhost:8080/products
+Content-Type: application/json
+
+
+## Order Service
+
+### Create Order
+POST http://localhost:8080/orders
+Content-Type: application/json
+X-User-Id: 1
+
+{
+    "items": [
+        {
+            "productId": 1,
+            "productName": "Product 1",
+            "productPrice": 100.00,
+            "quantity": 3
+        },
+        {
+            "productId": 2,
+            "productName": "Product 2",
+            "productPrice": 200.00,
+            "quantity": 1
+        }
+    ],
+    "paymentMethod": "PROMPT_PAY",
+    "paymentCurrency": "THB"
+}
+
+### Get Order By OrderId
+GET http://localhost:8080/orders/customer/f947176b-677b-409d-917e-2bacdf2575f8
+X-User-Id: 1
+
+### Pay Order
+POST http://localhost:8086/payments/order/f947176b-677b-409d-917e-2bacdf2575f8/pay
+
+### Cancel Order
+POST http://localhost:8086/payments/order/d019a4a7-81cf-45c6-a807-c634ad600569/cancel
+
+### Refund Order
+POST http://localhost:8086/payments/order/f947176b-677b-409d-917e-2bacdf2575f8/refund

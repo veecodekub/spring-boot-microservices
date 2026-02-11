@@ -1,0 +1,140 @@
+version: "3.8"
+
+services:
+  auth_postgres:
+    image: postgres:18
+    container_name: auth_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=auth_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql
+
+  user_postgres:
+    image: postgres:18
+    container_name: user_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=user_service
+    ports:
+      - "5433:5432"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql
+
+  product_postgres:
+    image: postgres:18
+    container_name: product_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=product_service
+    ports:
+      - "5434:5432"
+    volumes:
+      - product_postgres_data:/var/lib/postgresql
+
+  inventory_postgres:
+    image: postgres:18
+    container_name: inventory_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=inventory_service
+    ports:
+      - "5435:5432"
+    volumes:
+      - inventory_postgres_data:/var/lib/postgresql
+
+  order_postgres:
+    image: postgres:18
+    container_name: order_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=order_service
+    ports:
+      - "5436:5432"
+    volumes:
+      - order_postgres_data:/var/lib/postgresql
+
+  payment_postgres:
+    image: postgres:18
+    container_name: payment_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=payment_service
+    ports:
+      - "5437:5432"
+    volumes:
+      - payment_postgres_data:/var/lib/postgresql
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.4
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+  
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  keycloak_db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql
+    networks:
+      - microservices-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    ports:
+      - "9090:8080"
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak_db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT: "false" # Use with caution in production
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev # For development, use 'start' for production with proper configuration
+    depends_on:
+      - keycloak_db
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  auth_postgres_data:
+  user_postgres_data:
+  product_postgres_data:
+  inventory_postgres_data:
+  order_postgres_data:
+  payment_postgres_data:
+  keycloak_db_data:

@@ -1,0 +1,59 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: inventory-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/inventory_service
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        "[format_sql]": true
+
+  kafka:
+    bootstrap-servers: localhost:29092
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: 1.0.0
+    description: Inventory Service
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    preferIpAddress: true
+
+logging:
+  level:
+    root: INFO
+    "[org.springframework.web]": INFO
+    "[dev.veecodekub.inventoryservice]": DEBUG
+    "[org.springframework.transaction.interceptor]": DEBUG
+    "[org.springframework.orm.jpa.JpaTransactionManager]": DEBUG
+    "[org.springframework.jdbc.datasource.DataSourceTransactionManager]": DEBUG
+    "[org.hibernate.type.descriptor.sql.BasicBinder]": TRACE

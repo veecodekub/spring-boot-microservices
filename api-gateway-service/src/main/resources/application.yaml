@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9090/realms/microservices/protocol/openid-connect/certs
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:9090/realms/microservices
+        registration:
+          microservices-client:
+            provider: keycloak
+            client-id: microservices-client
+            client-secret: IWLSnakHG8aNTWNaWuSj0a11UY4lzxd9
+            authorization-grant-type: authorization_code
+            scope: openid
