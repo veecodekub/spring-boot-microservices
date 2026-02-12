@@ -6,9 +6,16 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import reactor.core.publisher.Mono;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+@RestController
 public class ApiGatewayServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayServiceApplication.class, args);
@@ -31,5 +38,11 @@ public class ApiGatewayServiceApplication {
                 .route("payment-service", r -> r.path("/payments/**")
                         .uri("lb://payment-service"))
                 .build();
+    }
+
+    @GetMapping(value = "/token")
+    public Mono<OAuth2AuthorizedClient> getHome(
+            @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient) {
+        return Mono.just(authorizedClient);
     }
 }
