@@ -1,12 +1,15 @@
 # Auth Service
 
 ### Register
-POST http://localhost:8080/auth/register
+POST http://localhost:8081/auth/register
 Content-Type: application/json
 
 {
     "username": "user12",
-    "password": "12345678"
+    "password": "12345678",
+    "email": "user12@gmail.com",
+    "firstName": "user",
+    "lastName": "12"
 }
 
 ### Login

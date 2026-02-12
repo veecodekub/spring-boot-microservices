@@ -79,6 +79,11 @@
             <artifactId>common-error</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-admin-client</artifactId>
+            <version>26.0.8</version>
+        </dependency>
     </dependencies>
 
     <build>

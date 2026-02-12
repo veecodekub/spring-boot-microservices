@@ -23,6 +23,13 @@ public enum AuthErrorCode implements ErrorCode {
             "Invalid credentials",
             ErrorCategory.AUTH,
             HttpStatus.UNAUTHORIZED,
+            false),
+
+    EMAIL_ALREADY_VERIFIED(
+            "EMAIL_ALREADY_VERIFIED",
+            "Email already verified",
+            ErrorCategory.AUTH,
+            HttpStatus.BAD_REQUEST,
             false);
 
     private final String code;
