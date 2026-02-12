@@ -22,6 +22,7 @@ public class ApiGatewayServiceApplication {
                 .route("user-service", r -> r.path("/users/**")
                         .uri("lb://user-service"))
                 .route("product-service", r -> r.path("/products/**")
+                        .filters(f -> f.tokenRelay())
                         .uri("lb://product-service"))
                 .route("inventory-service", r -> r.path("/inventories/**")
                         .uri("lb://inventory-service"))

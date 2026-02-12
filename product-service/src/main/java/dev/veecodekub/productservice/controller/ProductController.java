@@ -2,6 +2,7 @@ package dev.veecodekub.productservice.controller;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,16 +24,19 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     public ProductResponse createProduct(@Valid @RequestBody ProductCreationRequest request) {
         return productService.createProduct(request);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('user')")
     public ProductResponse getProductById(@PathVariable Long id) {
         return productService.getProductById(id);
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('user')")
     public List<ProductResponse> getAllProducts() {
         return productService.getAllProducts();
     }

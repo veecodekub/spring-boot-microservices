@@ -19,6 +19,12 @@ spring:
       hibernate:
         "[format_sql]": true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/microservices
+
 management:
   endpoints:
     web:
@@ -44,5 +50,7 @@ eureka:
 logging:
   level:
     root: INFO
-    "[org.springframework.web]": INFO
+    "[org.springframework.web]": DEBUG
     "[dev.veecodekub.productservice]": DEBUG
+    "[org.springframework.security]": DEBUG
+    "[org.springframework.security.oauth2]": TRACE

@@ -7,17 +7,40 @@ spring:
 
   security:
     oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:9090/realms/microservices/protocol/openid-connect/certs
       client:
         provider:
           keycloak:
             issuer-uri: http://localhost:9090/realms/microservices
+            user-name-attribute: preferred_username
         registration:
-          microservices-client:
+          keycloak:
             provider: keycloak
-            client-id: microservices-client
-            client-secret: IWLSnakHG8aNTWNaWuSj0a11UY4lzxd9
+            client-id: spring-gateway-client
+            client-secret: qfPoN6HgZqLIDa0MhEfsr8yMXCcphoDU
+            scope: openid, profile, email
             authorization-grant-type: authorization_code
-            scope: openid
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            cors-configurations:
+              "[/**]":
+                allowedOrigins:
+                  - "http://localhost:3000"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - "*" # Allows all headers
+                allowCredentials: true
+
+logging:
+  level:
+    root: INFO
+    "[org.springframework.web]": INFO
