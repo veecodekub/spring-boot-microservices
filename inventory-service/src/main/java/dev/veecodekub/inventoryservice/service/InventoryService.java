@@ -1,6 +1,9 @@
 package dev.veecodekub.inventoryservice.service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +58,20 @@ public class InventoryService {
         log.debug("getAvailableQtyByProductId-[next]:(inventory fetched successfully) inventory: {}", inventory);
 
         return inventory.getAvailableQty();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> getStockBatch(List<Long> productIds) {
+        log.debug("getStockBatch-[next]:(fetching inventory) productIds: {}", productIds);
+
+        Map<Long, Integer> inventoryMap = inventoryRepository.findByProductIdIn(productIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Inventory::getProductId,
+                        Inventory::getAvailableQty));
+        log.debug("getStockBatch-[next]:(inventory fetched successfully) inventoryMap: {}", inventoryMap);
+
+        return inventoryMap;
     }
 
     public void reserveStockForOrder(UUID orderId) {

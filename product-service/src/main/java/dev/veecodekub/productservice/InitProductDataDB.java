@@ -5,6 +5,7 @@ import java.util.stream.IntStream;
 
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import dev.veecodekub.productservice.dto.ProductCreationRequest;
@@ -18,7 +19,7 @@ public class InitProductDataDB {
     @Bean
     ApplicationRunner runner(ProductService service) {
         return args -> {
-            if (service.getAllProducts().isEmpty()) {
+            if (service.getProducts(Pageable.unpaged()).isEmpty()) {
                 IntStream.rangeClosed(1, 10)
                         .forEach(i -> service.createProduct(new ProductCreationRequest(
                                 "Product " + i,

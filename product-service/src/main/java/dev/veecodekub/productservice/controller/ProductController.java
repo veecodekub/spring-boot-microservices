@@ -1,7 +1,7 @@
 package dev.veecodekub.productservice.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,8 +36,8 @@ public class ProductController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('user')")
-    public List<ProductResponse> getAllProducts() {
-        return productService.getAllProducts();
+    // @PreAuthorize("hasRole('user')")
+    public Page<ProductResponse> getProducts(Pageable pageable) {
+        return productService.getProducts(pageable);
     }
 }

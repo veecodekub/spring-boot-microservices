@@ -1,7 +1,10 @@
 package dev.veecodekub.productservice.service;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,14 +66,22 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts() {
-        log.debug("getAllProducts-[next]:(fetching all products)");
+    public Page<ProductResponse> getProducts(Pageable pageable) {
+        log.debug("getProducts-[next]:(fetching all products)");
 
-        List<ProductResponse> responses = productRepository.findAll()
+        Page<Product> page = productRepository.findAll(pageable);
+
+        List<Long> productIds = page.getContent()
                 .stream()
-                .map(productMapper::toProductResponse)
+                .map(Product::getId)
                 .toList();
-        log.debug("getAllProducts-[next]:(products response). response: {}", responses);
+
+        Map<Long, Integer> stockMap = inventoryClient.getStockBatch(productIds);
+
+        Page<ProductResponse> responses = page.map(product -> productMapper.toProductResponseWithQuantity(product,
+                stockMap.getOrDefault(product.getId(), 0)));
+
+        log.debug("getProducts-[next]:(products response). response: {}", responses);
 
         return responses;
     }

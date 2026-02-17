@@ -19,6 +19,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
     Optional<Inventory> findByProductId(Long productId);
 
+    List<Inventory> findByProductIdIn(List<Long> productIds);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Inventory i WHERE i.productId IN :productIds")
     List<Inventory> findAllForUpdate(@Param("productIds") List<Long> productIds);
