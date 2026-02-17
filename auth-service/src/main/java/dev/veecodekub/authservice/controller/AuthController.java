@@ -6,10 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.veecodekub.authservice.dto.LoginRequest;
+import dev.veecodekub.authservice.dto.RegisterRequest;
 import dev.veecodekub.authservice.dto.TokenResponse;
-import dev.veecodekub.authservice.dto.UserDto;
 import dev.veecodekub.authservice.service.AuthService;
-import dev.veecodekub.authservice.service.KeycloakUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -19,11 +18,10 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
-    private final KeycloakUserService keycloakUserService;
 
     @PostMapping("/register")
-    public void register(@Valid @RequestBody UserDto request) {
-        keycloakUserService.createUser(request);
+    public TokenResponse register(@Valid @RequestBody RegisterRequest request) {
+        return authService.register(request);
     }
 
     @PostMapping("/login")

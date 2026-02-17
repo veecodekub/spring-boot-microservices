@@ -24,13 +24,6 @@ jwt:
   secret-key: ff92ca3955b73dacd9afa57a71825bab9f27bea84467afc3bae363209b3c6929
   expiration: 86400000
 
-keycloak:
-  auth-server-url: http://localhost:9090
-  admin-realm: master
-  admin-client-id: admin-cli
-  admin-username: admin
-  admin-password: admin
-
 management:
   endpoints:
     web:
@@ -59,4 +52,3 @@ logging:
     root: INFO
     "[org.springframework.web]": INFO
     "[dev.veecodekub.authservice]": DEBUG
-    "[org.keycloak.admin.client]": DEBUG
