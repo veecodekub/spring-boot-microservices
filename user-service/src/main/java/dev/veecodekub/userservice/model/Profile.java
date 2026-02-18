@@ -1,8 +1,5 @@
 package dev.veecodekub.userservice.model;
 
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,8 +18,6 @@ import lombok.ToString;
 @Table(name = "profiles", indexes = {
         @Index(name = "idx_user_id", columnList = "user_id", unique = true)
 })
-@DynamicInsert
-@DynamicUpdate
 @Getter
 @Setter
 @ToString

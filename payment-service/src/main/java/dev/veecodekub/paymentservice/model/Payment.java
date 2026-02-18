@@ -5,8 +5,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import dev.veecodekub.paymentservice.enumerate.PaymentMethod;
@@ -32,8 +30,6 @@ import lombok.ToString;
 @Table(name = "payments", indexes = {
         @Index(name = "idx_order_id", columnList = "order_id", unique = true)
 })
-@DynamicInsert
-@DynamicUpdate
 @Getter
 @Setter
 @ToString

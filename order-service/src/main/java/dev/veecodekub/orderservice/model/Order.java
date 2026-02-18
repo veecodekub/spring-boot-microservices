@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import dev.veecodekub.orderservice.dto.CreateOrderRequest.OrderItemRequest;
@@ -38,8 +36,6 @@ import lombok.ToString;
 @Table(name = "orders", indexes = {
         @Index(columnList = "customer_id", name = "idx_customer_id")
 })
-@DynamicInsert
-@DynamicUpdate
 @Getter
 @Setter
 @ToString

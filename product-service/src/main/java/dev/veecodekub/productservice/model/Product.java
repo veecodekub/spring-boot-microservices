@@ -2,9 +2,6 @@ package dev.veecodekub.productservice.model;
 
 import java.math.BigDecimal;
 
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,8 +17,6 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "products")
-@DynamicInsert
-@DynamicUpdate
 @Getter
 @Setter
 @ToString

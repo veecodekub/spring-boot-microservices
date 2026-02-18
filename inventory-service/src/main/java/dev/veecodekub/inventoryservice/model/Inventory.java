@@ -1,8 +1,5 @@
 package dev.veecodekub.inventoryservice.model;
 
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,8 +18,6 @@ import lombok.ToString;
 @Table(name = "inventories", indexes = {
         @Index(columnList = "product_id", unique = true)
 })
-@DynamicInsert
-@DynamicUpdate
 @Getter
 @Setter
 @ToString
