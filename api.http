@@ -13,12 +13,12 @@ Content-Type: application/json
 }
 
 ### Login
-POST http://localhost:8080/auth/login
+POST http://localhost:8081/auth/login
 Content-Type: application/json
 
 {
-    "username": "test1",
-    "password": "test1234"
+    "username": "user12",
+    "password": "12345678"
 }
 
 

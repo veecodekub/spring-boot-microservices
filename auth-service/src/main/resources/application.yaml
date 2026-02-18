@@ -21,8 +21,9 @@ spring:
 
 jwt:
   issuer: auth-service
-  secret-key: ff92ca3955b73dacd9afa57a71825bab9f27bea84467afc3bae363209b3c6929
-  expiration: 86400000
+  expiration: 1h
+  public-key: classpath:jwt/public.pem
+  private-key: classpath:jwt/private.pem
 
 management:
   endpoints:
@@ -52,3 +53,4 @@ logging:
     root: INFO
     "[org.springframework.web]": INFO
     "[dev.veecodekub.authservice]": DEBUG
+    "[org.springframework.web.servlet]": DEBUG
