@@ -30,6 +30,13 @@ public enum AuthErrorCode implements ErrorCode {
             "Email already verified",
             ErrorCategory.AUTH,
             HttpStatus.BAD_REQUEST,
+            false),
+
+    FORBIDDEN(
+            "FORBIDDEN",
+            "You don't have permission to access this resource",
+            ErrorCategory.AUTH,
+            HttpStatus.FORBIDDEN,
             false);
 
     private final String code;
