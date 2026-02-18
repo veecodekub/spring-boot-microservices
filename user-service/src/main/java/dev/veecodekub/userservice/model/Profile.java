@@ -12,8 +12,10 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "profiles", indexes = {
@@ -21,7 +23,9 @@ import lombok.NoArgsConstructor;
 })
 @DynamicInsert
 @DynamicUpdate
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

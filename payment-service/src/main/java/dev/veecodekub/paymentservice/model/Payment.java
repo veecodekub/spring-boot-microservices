@@ -23,17 +23,21 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "payments", indexes = {
-        @Index(columnList = "order_id", unique = true, name = "idx_order_id")
+        @Index(name = "idx_order_id", columnList = "order_id", unique = true)
 })
 @DynamicInsert
 @DynamicUpdate
-@Data
-@RequiredArgsConstructor
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Payment {
