@@ -68,11 +68,11 @@ Content-Type: application/json
 
 ### Get Product By Id
 GET http://localhost:8080/products/11
-Content-Type: application/json
+Authorization: Bearer {{token}}
 
 ### Get All Products
 GET http://localhost:8080/products
-Content-Type: application/json
+Authorization: Bearer {{token}}
 
 
 ## Order Service

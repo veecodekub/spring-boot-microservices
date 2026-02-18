@@ -24,19 +24,19 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductResponse createProduct(@Valid @RequestBody ProductCreationRequest request) {
         return productService.createProduct(request);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('user')")
+    @PreAuthorize("hasRole('USER')")
     public ProductResponse getProductById(@PathVariable Long id) {
         return productService.getProductById(id);
     }
 
     @GetMapping
-    // @PreAuthorize("hasRole('user')")
+    @PreAuthorize("hasRole('USER')")
     public Page<ProductResponse> getProducts(Pageable pageable) {
         return productService.getProducts(pageable);
     }
