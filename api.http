@@ -1,5 +1,6 @@
 # Auth Service
 
+### Token
 @token = eyJraWQiOiJmYzY3Y2VlYS1lYzlkLTQ0ODUtODk3MS1lNDI1ZWMwMDZhMTYiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIiLCJ1aWQiOjEsInNjb3BlIjoiUk9MRV9VU0VSIEZBQ1RPUl9QQVNTV09SRCIsImlzcyI6ImF1dGgtc2VydmljZSIsImV4cCI6MTc3MTQzMDkyNSwiaWF0IjoxNzcxNDI3MzI1LCJqdGkiOiJmYzhmMDg4NC1jMjg4LTRiYzctODQxZi1kMjFhOTVhYjQ4MjcifQ.NPKxSDZ3pKlf9IHGQIJvczzccFtDrLWT4h9ZhxsRNiBzCtihG7H24aDddet-4ffJRsE5KF-KYdu3zdJ4LnnqfQScfRBQrFBfFgWnU6Hv6GYxHZyDglwoHsL71tokn1KhE5Pv6qVC2b_2_g2R7DfKU1Aam3qW0iSKiGWg4f165eifeiyOcJS_brzf1cbJlR4_6GDlP91bdHbGzJsGKFGlvxV0kWcb8F4WlLRnFt_Am5C6apLmJuVcO6_9ONFRQyCpBxsk6VBPoOI5Sqj7Kbm21Mb8qCS7LcKu-bSlIhygJgUy7-gzGFhAbSAOEIU_1ZwIAHu25P-Rts6SrcdclDeaxw
 
 ### Register
@@ -79,8 +80,8 @@ Authorization: Bearer {{token}}
 
 ### Create Order
 POST http://localhost:8080/orders
+Authorization: Bearer {{token}}
 Content-Type: application/json
-X-User-Id: 1
 
 {
     "items": [
@@ -101,15 +102,18 @@ X-User-Id: 1
     "paymentCurrency": "THB"
 }
 
+### Order Id
+@orderId = 07b1c945-5fb4-4f9b-9e7e-fc4164b88c9a
+
 ### Get Order By OrderId
-GET http://localhost:8080/orders/customer/f947176b-677b-409d-917e-2bacdf2575f8
-X-User-Id: 1
+GET http://localhost:8080/orders/customer/{{orderId}}
+Authorization: Bearer {{token}}
 
 ### Pay Order
-POST http://localhost:8086/payments/order/f947176b-677b-409d-917e-2bacdf2575f8/pay
+POST http://localhost:8086/payments/order/{{orderId}}/pay
 
 ### Cancel Order
-POST http://localhost:8086/payments/order/d019a4a7-81cf-45c6-a807-c634ad600569/cancel
+POST http://localhost:8086/payments/order/{{orderId}}/cancel
 
 ### Refund Order
-POST http://localhost:8086/payments/order/f947176b-677b-409d-917e-2bacdf2575f8/refund
+POST http://localhost:8086/payments/order/{{orderId}}/refund

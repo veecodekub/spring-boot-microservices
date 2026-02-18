@@ -19,6 +19,12 @@ spring:
       hibernate:
         "[format_sql]": true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/auth/.well-known/jwks.json
+
   kafka:
     bootstrap-servers: localhost:29092
     producer:
