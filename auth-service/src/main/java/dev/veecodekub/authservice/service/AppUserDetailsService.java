@@ -1,5 +1,8 @@
 package dev.veecodekub.authservice.service;
 
+import java.util.List;
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,17 +26,13 @@ public class AppUserDetailsService implements UserDetailsService {
         log.debug("loadUserByUsername -> username: {}", username);
 
         AppUser user = repository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid Username"));
 
-        return User.builder()
-                .username(username)
-                .password(user.getPassword())
-                .roles("USER", "ADMIN")
-                .disabled(false)
-                .accountExpired(false)
-                .accountLocked(false)
-                .credentialsExpired(false)
-                .build();
+        List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+
+        return new User(user.getUsername(), user.getPassword(), authorities);
     }
 
 }

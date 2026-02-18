@@ -1,11 +1,15 @@
 package dev.veecodekub.authservice.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "users", indexes = {
+@Table(name = "app_users", indexes = {
         @Index(name = "idx_username", columnList = "username", unique = true)
 })
 @DynamicInsert
@@ -41,4 +45,8 @@ public class AppUser {
     @JsonIgnore
     @Column(nullable = false)
     private String password;
+
+    @ElementCollection
+    @Builder.Default
+    private Set<String> roles = new HashSet<>();
 }

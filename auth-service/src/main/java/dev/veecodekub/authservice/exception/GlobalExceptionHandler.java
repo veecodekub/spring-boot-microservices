@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import dev.veecodekub.common.error.BusinessException;
 import dev.veecodekub.common.error.ErrorCode;
 import dev.veecodekub.common.error.ErrorResponse;
+import dev.veecodekub.common.error.auth.AuthErrorCode;
 import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
@@ -47,6 +49,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.validation(fieldErrors));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
+        log.error("Authentication error: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.from(AuthErrorCode.INVALID_CREDENTIALS));
     }
 
     @ExceptionHandler(Exception.class)
