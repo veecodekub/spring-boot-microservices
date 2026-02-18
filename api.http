@@ -9,10 +9,7 @@ Content-Type: application/json
 
 {
     "username": "user12",
-    "password": "12345678",
-    "email": "user12@gmail.com",
-    "firstName": "user",
-    "lastName": "12"
+    "password": "12345678"
 }
 
 ### Login
