@@ -1,5 +1,7 @@
 package dev.veecodekub.authservice.config;
 
+import java.util.UUID;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -7,7 +9,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
-import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -24,13 +26,17 @@ public class JwtConfig {
     private final JwtProperties props;
 
     @Bean
-    JWKSource<SecurityContext> jwkSource() {
-        JWK jwk = new RSAKey.Builder(props.publicKey())
+    RSAKey rsaKey() {
+        return new RSAKey.Builder(props.publicKey())
                 .privateKey(props.privateKey())
-                .keyID(props.issuer())
+                .keyID(UUID.randomUUID().toString())
                 .build();
+    }
 
-        return new ImmutableJWKSet<>(new JWKSet(jwk));
+    @Bean
+    JWKSource<SecurityContext> jwkSource(RSAKey rsaKey) {
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return new ImmutableJWKSet<>(jwkSet);
     }
 
     @Bean
@@ -39,7 +45,7 @@ public class JwtConfig {
     }
 
     @Bean
-    JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withPublicKey(props.publicKey()).build();
+    JwtDecoder jwtDecoder(RSAKey rsaKey) throws JOSEException {
+        return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
     }
 }

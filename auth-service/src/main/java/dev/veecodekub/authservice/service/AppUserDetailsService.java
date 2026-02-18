@@ -6,13 +6,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.veecodekub.authservice.dto.AppUserDetails;
 import dev.veecodekub.authservice.model.AppUser;
 import dev.veecodekub.authservice.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,11 @@ public class AppUserDetailsService implements UserDetailsService {
                 .map(SimpleGrantedAuthority::new)
                 .toList();
 
-        return new User(appUser.getUsername(), appUser.getPassword(), authorities);
+        return new AppUserDetails(
+                appUser.getId(),
+                appUser.getUsername(),
+                appUser.getPassword(),
+                authorities);
     }
 
 }

@@ -6,11 +6,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
+import dev.veecodekub.authservice.dto.AppUserDetails;
 import dev.veecodekub.authservice.props.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +32,19 @@ public class TokenService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(" "));
 
+        AppUserDetails userPrincipal = (AppUserDetails) authentication.getPrincipal();
+
+        if (userPrincipal == null) {
+            throw new UsernameNotFoundException("Invalid Username");
+        }
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(props.issuer())
                 .issuedAt(now)
                 .expiresAt(now.plus(props.expiration()))
                 .id(UUID.randomUUID().toString())
                 .subject(authentication.getName())
+                .claim("uid", userPrincipal.getId())
                 .claim("scope", scope)
                 .build();
 
