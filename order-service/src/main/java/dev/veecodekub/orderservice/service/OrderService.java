@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +70,19 @@ public class OrderService {
         log.debug("getOrderByOrderId-[next]:(order response). response: {}", response);
 
         return response;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getOrdersByCustomerId(Long customerId, Pageable pageable) {
+        log.debug("getOrdersByCustomerId-[next]:(fetching orders). customerId: {}, pageable: {}", customerId, pageable);
+
+        Page<Order> orders = orderRepository.findByCustomerId(customerId, pageable);
+        log.debug("getOrdersByCustomerId-[next]:(orders found). orders: {}", orders);
+
+        Page<OrderResponse> responses = orders.map(orderMapper::toOrderResponse);
+        log.debug("getOrdersByCustomerId-[next]:(order responses). responses: {}", responses);
+
+        return responses;
     }
 
     @Transactional(readOnly = true)

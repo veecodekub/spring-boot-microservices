@@ -3,6 +3,8 @@ package dev.veecodekub.orderservice.repository;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +21,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     @Modifying
     @Query("UPDATE Order o SET o.status = :status WHERE o.id = :orderId")
     void updateOrderStatus(@Param("orderId") UUID orderId, @Param("status") OrderStatus status);
+
+    Page<Order> findByCustomerId(Long customerId, Pageable pageable);
 }

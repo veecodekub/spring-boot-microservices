@@ -2,6 +2,8 @@ package dev.veecodekub.orderservice.controller;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +31,14 @@ public class OrderController {
             @CurrentUserId Long userId,
             @RequestBody CreateOrderRequest request) {
         return orderService.placeOrder(userId, request);
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('USER')")
+    public Page<OrderResponse> getMyOrders(
+            @CurrentUserId Long userId,
+            Pageable pageable) {
+        return orderService.getOrdersByCustomerId(userId, pageable);
     }
 
     @GetMapping("/customer/{orderId}")
