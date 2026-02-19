@@ -1,489 +1,738 @@
+/* ==============================================
+   Microservices Dashboard — SPA Application Logic
+   ============================================== */
+
 const API_BASE = "http://localhost:8080";
-const PAYMENT_BASE = "http://localhost:8086";
 
-const state = {
-  token: localStorage.getItem("token") || "",
-  userId: localStorage.getItem("userId") || "",
-  username: localStorage.getItem("username") || "",
-  currentPage: "auth",
-};
+// ── State ───────────────────────────────────────
+let currentPage = "dashboard";
+let authMode = "login"; // 'login' | 'register'
+let profileExists = false;
+let currentOrderId = null;
+let productsPage = 0;
+const productsSize = 10;
+let allProductsCache = []; // cache for order product dropdown
 
-// ===== Utility Functions =====
-function showToast(message, type = "info") {
-  const container = document.getElementById("toastContainer");
-  const toast = document.createElement("div");
-  toast.className = `toast toast-${type}`;
-  const icons = { success: "✓", error: "✕", info: "ℹ" };
-  toast.innerHTML = `<span>${icons[type] || "ℹ"}</span><span>${message}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+// ── Token Management ────────────────────────────
+function getToken() {
+  return localStorage.getItem("token");
 }
 
-function setLoading(btn, loading) {
-  if (loading) {
-    btn.dataset.originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Loading...';
-    btn.disabled = true;
-  } else {
-    btn.innerHTML = btn.dataset.originalText || btn.innerHTML;
-    btn.disabled = false;
-  }
+function setToken(token) {
+  localStorage.setItem("token", token);
 }
 
-async function apiCall(url, options = {}) {
-  const headers = { "Content-Type": "application/json", ...options.headers };
-  if (state.token) headers["Authorization"] = `Bearer ${state.token}`;
-  if (state.userId) headers["X-User-Id"] = state.userId;
-  const res = await fetch(url, { ...options, headers });
-  const text = await res.text();
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    data = text;
-  }
-  if (!res.ok)
-    throw new Error(
-      data?.message || data?.error || `Request failed (${res.status})`,
-    );
-  return data;
-}
-
-function formatPrice(price) {
-  return new Intl.NumberFormat("th-TH", {
-    style: "currency",
-    currency: "THB",
-  }).format(price);
-}
-
-function getStatusBadge(status) {
-  const map = {
-    PENDING: "warning",
-    PAID: "success",
-    COMPLETED: "success",
-    CANCELLED: "danger",
-    REFUNDED: "purple",
-    PROCESSING: "info",
-  };
-  return `<span class="badge badge-${map[status] || "info"}">${status}</span>`;
-}
-
-// ===== Navigation =====
-function navigate(page) {
-  state.currentPage = page;
-  document
-    .querySelectorAll(".nav-item")
-    .forEach((el) => el.classList.remove("active"));
-  document
-    .querySelectorAll(".section-page")
-    .forEach((el) => el.classList.remove("active"));
-  const navEl = document.querySelector(`[data-page="${page}"]`);
-  const pageEl = document.getElementById(`page-${page}`);
-  if (navEl) navEl.classList.add("active");
-  if (pageEl) {
-    pageEl.classList.add("active");
-    pageEl.style.animation = "none";
-    pageEl.offsetHeight;
-    pageEl.style.animation = "fadeInUp 0.4s ease";
-  }
-  updateUserBar();
-  if (page === "products") loadProducts();
-}
-
-function updateUserBar() {
-  const bar = document.getElementById("userBar");
-  if (state.token && state.username) {
-    bar.style.display = "flex";
-    bar.innerHTML = `
-      <div class="user-info"><div class="user-avatar">${state.username[0].toUpperCase()}</div>
-      <span>Logged in as <strong>${state.username}</strong> (ID: ${state.userId})</span></div>
-      <button class="btn btn-sm btn-outline" onclick="logout()">Logout</button>`;
-  } else {
-    bar.style.display = "none";
-  }
-}
-
-function logout() {
-  state.token = "";
-  state.userId = "";
-  state.username = "";
+function removeToken() {
   localStorage.removeItem("token");
-  localStorage.removeItem("userId");
-  localStorage.removeItem("username");
-  updateUserBar();
-  navigate("auth");
-  showToast("Logged out successfully", "info");
 }
 
-// ===== Auth =====
-function switchAuthTab(tab) {
-  document
-    .querySelectorAll(".auth-tab")
-    .forEach((el) => el.classList.remove("active"));
-  document
-    .querySelectorAll(".auth-form")
-    .forEach((el) => el.classList.remove("active"));
-  document.querySelector(`[data-auth-tab="${tab}"]`).classList.add("active");
-  document.getElementById(`form-${tab}`).classList.add("active");
-}
-
-async function handleRegister(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  setLoading(btn, true);
+function getUsername() {
+  const token = getToken();
+  if (!token) return "";
   try {
-    const data = {
-      username: document.getElementById("regUsername").value,
-      password: document.getElementById("regPassword").value,
-    };
-    await apiCall(`${API_BASE}/auth/register`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    showToast("Registration successful! Please login.", "success");
-    switchAuthTab("login");
-    document.getElementById("loginUsername").value = data.username;
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    setLoading(btn, false);
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.sub || "";
+  } catch {
+    return "";
   }
 }
 
-async function handleLogin(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  setLoading(btn, true);
-  try {
-    const username = document.getElementById("loginUsername").value;
-    const data = {
-      username,
-      password: document.getElementById("loginPassword").value,
-    };
-    const res = await apiCall(`${API_BASE}/auth/login`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    state.token = res.token || res.accessToken || res;
-    state.username = username;
-    state.userId = res.userId || res.id || "1";
-    localStorage.setItem("token", state.token);
-    localStorage.setItem("userId", state.userId);
-    localStorage.setItem("username", state.username);
-    showToast(`Welcome back, ${username}!`, "success");
-    updateUserBar();
-    navigate("products");
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    setLoading(btn, false);
-  }
+function isLoggedIn() {
+  return !!getToken();
 }
 
-// ===== User Profile =====
-async function handleCreateProfile(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  setLoading(btn, true);
-  try {
-    const data = {
-      name: document.getElementById("profileName").value,
-      address: document.getElementById("profileAddress").value,
-      phone: document.getElementById("profilePhone").value,
-    };
-    await apiCall(`${API_BASE}/users/profile`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    showToast("Profile created successfully!", "success");
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    setLoading(btn, false);
-  }
-}
+// ── API Helper ──────────────────────────────────
+async function api(path, options = {}, base = API_BASE) {
+  const url = `${base}${path}`;
+  const headers = { "Content-Type": "application/json", ...options.headers };
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-async function loadProfile() {
-  const container = document.getElementById("profileResult");
   try {
-    const profile = await apiCall(`${API_BASE}/users/profile`);
-    container.innerHTML = `
-      <div class="order-detail-grid">
-        <div class="detail-item"><div class="detail-label">Name</div><div class="detail-value">${profile.name || "-"}</div></div>
-        <div class="detail-item"><div class="detail-label">Phone</div><div class="detail-value">${profile.phone || "-"}</div></div>
-        <div class="detail-item"><div class="detail-label">Address</div><div class="detail-value">${profile.address || "-"}</div></div>
-      </div>`;
-    document.getElementById("editName").value = profile.name || "";
-    document.getElementById("editAddress").value = profile.address || "";
-    document.getElementById("editPhone").value = profile.phone || "";
-    showToast("Profile loaded", "success");
-  } catch (err) {
-    container.innerHTML = `<div class="empty-state"><p>${err.message}</p></div>`;
-    showToast(err.message, "error");
-  }
-}
-
-async function handleUpdateProfile(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  setLoading(btn, true);
-  try {
-    const data = {
-      name: document.getElementById("editName").value,
-      address: document.getElementById("editAddress").value,
-      phone: document.getElementById("editPhone").value,
-    };
-    await apiCall(`${API_BASE}/users/profile`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-    showToast("Profile updated!", "success");
-    loadProfile();
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    setLoading(btn, false);
-  }
-}
-
-// ===== Products =====
-async function loadProducts() {
-  const grid = document.getElementById("productsGrid");
-  grid.innerHTML =
-    '<div class="empty-state"><span class="spinner" style="width:32px;height:32px;border-width:3px;display:inline-block;border:3px solid rgba(99,102,241,0.2);border-top-color:#6366f1;border-radius:50%;animation:spin 0.6s linear infinite"></span><p class="mt-16">Loading products...</p></div>';
-  try {
-    const products = await apiCall(`${API_BASE}/products`);
-    const list = Array.isArray(products)
-      ? products
-      : products.content || products.data || [];
-    if (list.length === 0) {
-      grid.innerHTML =
-        '<div class="empty-state"><div class="empty-icon">📦</div><p>No products yet. Create one!</p></div>';
-      return;
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401 || res.status === 403) {
+      toast("Session expired. Please login again.", "error");
+      logout();
+      return null;
     }
-    grid.innerHTML = list
-      .map(
-        (p) => `
-      <div class="product-card">
-        <div class="product-name">${p.name}</div>
-        <div class="product-desc">${p.description || ""}</div>
-        <div class="product-price">${formatPrice(p.price)}</div>
-        <div class="product-qty">Stock: ${p.quantity ?? "-"}</div>
-        <div class="flex items-center justify-between mt-16">
-          <span class="badge badge-info">ID: ${p.id}</span>
-        </div>
-      </div>`,
-      )
-      .join("");
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+    if (!res.ok) {
+      // Parse structured API error response
+      const errObj = typeof data === "object" && data !== null ? data : {};
+      const msg =
+        errObj.message || errObj.error || `Request failed (${res.status})`;
+      // Show toast with message + details directly
+      toast(msg, "error", errObj.details);
+      return null;
+    }
+    return data;
   } catch (err) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>${err.message}</p></div>`;
+    if (err.message === "Failed to fetch") {
+      toast("Network error — is the API gateway running?", "error");
+      return null;
+    }
+    toast(err.message, "error");
+    return null;
   }
 }
 
-async function handleCreateProduct(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  setLoading(btn, true);
-  try {
-    const data = {
-      name: document.getElementById("prodName").value,
-      description: document.getElementById("prodDesc").value,
-      price: parseFloat(document.getElementById("prodPrice").value),
-      quantity: parseInt(document.getElementById("prodQty").value),
-    };
-    await apiCall(`${API_BASE}/products`, {
-      method: "POST",
-      body: JSON.stringify(data),
+// ── Toast Notifications ─────────────────────────
+function toast(message, type = "info", details = null) {
+  const container = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = `toast ${type === "error" ? "toast-error" : type === "success" ? "toast-success" : ""}`;
+
+  // Title line
+  const title = document.createElement("div");
+  title.style.fontWeight = "700";
+  title.textContent = message;
+  el.appendChild(title);
+
+  // Detail fields from API error (e.g. { password: "must be 8-16 chars" })
+  if (details && typeof details === "object") {
+    const detailsDiv = document.createElement("div");
+    detailsDiv.style.marginTop = "6px";
+    Object.entries(details).forEach(([field, msg]) => {
+      const line = document.createElement("div");
+      line.style.fontSize = "0.8rem";
+      line.style.opacity = "0.9";
+      line.style.marginTop = "2px";
+      line.textContent = `• ${field}: ${msg}`;
+      detailsDiv.appendChild(line);
     });
-    showToast("Product created!", "success");
-    e.target.reset();
-    loadProducts();
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    setLoading(btn, false);
+    el.appendChild(detailsDiv);
   }
+
+  container.appendChild(el);
+  const duration = details ? 5000 : 3500;
+  setTimeout(() => el.remove(), duration);
 }
 
-async function searchProduct() {
-  const id = document.getElementById("searchProductId").value;
-  const container = document.getElementById("searchProductResult");
-  if (!id) {
-    showToast("Enter product ID", "error");
+// ── Theme Toggle ────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  document.getElementById("theme-toggle-btn").textContent =
+    next === "dark" ? "☀️" : "🌙";
+}
+
+function initTheme() {
+  const saved = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.getElementById("theme-toggle-btn").textContent =
+    saved === "dark" ? "☀️" : "🌙";
+}
+
+// ── Modals ──────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
+}
+
+// ── Navigation / Router ─────────────────────────
+function navigateTo(page) {
+  window.location.hash = page;
+}
+
+function handleRoute() {
+  const hash = window.location.hash.replace("#", "") || "dashboard";
+  if (!isLoggedIn()) {
+    showAuth();
     return;
   }
-  try {
-    const p = await apiCall(`${API_BASE}/products/${id}`);
-    container.innerHTML = `
-      <div class="product-card">
-        <div class="product-name">${p.name}</div>
-        <div class="product-desc">${p.description || ""}</div>
-        <div class="product-price">${formatPrice(p.price)}</div>
-        <div class="product-qty">Stock: ${p.quantity ?? "-"}</div>
-      </div>`;
-  } catch (err) {
-    container.innerHTML = `<div class="empty-state"><p>${err.message}</p></div>`;
-    showToast(err.message, "error");
+  showApp();
+  setActivePage(hash);
+}
+
+function setActivePage(page) {
+  currentPage = page;
+  // Hide all pages
+  document
+    .querySelectorAll(".page")
+    .forEach((p) => p.classList.remove("active"));
+  // Show target
+  const target = document.getElementById(`page-${page}`);
+  if (target) {
+    target.classList.add("active");
+  } else {
+    document.getElementById("page-dashboard").classList.add("active");
+    currentPage = "dashboard";
   }
-}
-
-// ===== Orders =====
-let orderItems = [
-  { productId: "", productName: "", productPrice: "", quantity: 1 },
-];
-
-function renderOrderItems() {
-  const list = document.getElementById("orderItemsList");
-  list.innerHTML = orderItems
-    .map(
-      (item, i) => `
-    <div class="order-item-row">
-      <div class="form-group"><label>Product Name</label><input class="form-control" placeholder="Product name" value="${item.productName}" onchange="orderItems[${i}].productName=this.value"></div>
-      <div class="form-group"><label>Price</label><input class="form-control" type="number" step="0.01" placeholder="0.00" value="${item.productPrice}" onchange="orderItems[${i}].productPrice=parseFloat(this.value)"></div>
-      <div class="form-group"><label>Qty</label><input class="form-control" type="number" min="1" value="${item.quantity}" onchange="orderItems[${i}].quantity=parseInt(this.value)"></div>
-      <button class="remove-item-btn" onclick="removeOrderItem(${i})" ${orderItems.length === 1 ? 'disabled style=\"opacity:0.3\"' : ""}>✕</button>
-    </div>`,
-    )
-    .join("");
-}
-
-function addOrderItem() {
-  orderItems.push({
-    productId: "",
-    productName: "",
-    productPrice: "",
-    quantity: 1,
+  // Update nav links
+  document.querySelectorAll(".navbar-nav a").forEach((a) => {
+    a.classList.toggle("active", a.getAttribute("data-page") === currentPage);
   });
-  renderOrderItems();
+  // Load page data
+  onPageLoad(currentPage);
 }
 
-function removeOrderItem(i) {
-  if (orderItems.length > 1) {
-    orderItems.splice(i, 1);
-    renderOrderItems();
+function onPageLoad(page) {
+  switch (page) {
+    case "dashboard":
+      loadDashboard();
+      break;
+    case "profile":
+      loadProfile();
+      break;
+    case "products":
+      loadProducts();
+      break;
+    case "orders":
+      break; // orders are loaded on demand
   }
 }
 
-async function handleCreateOrder(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  setLoading(btn, true);
+function showAuth() {
+  document.getElementById("auth-page").classList.add("active");
+  document.getElementById("main-app").classList.add("hidden");
+}
+
+function showApp() {
+  document.getElementById("auth-page").classList.remove("active");
+  document.getElementById("main-app").classList.remove("hidden");
+  document.getElementById("dashboard-username").textContent = getUsername();
+}
+
+// ── Auth ────────────────────────────────────────
+function toggleAuthMode() {
+  authMode = authMode === "login" ? "register" : "login";
+  const isLogin = authMode === "login";
+  document.getElementById("auth-title").textContent = isLogin
+    ? "Sign In"
+    : "Sign Up";
+  document.getElementById("auth-subtitle").textContent = isLogin
+    ? "Welcome back to your dashboard"
+    : "Create a new account";
+  document.getElementById("auth-submit").textContent = isLogin
+    ? "Sign In"
+    : "Sign Up";
+  document.getElementById("auth-toggle-text").textContent = isLogin
+    ? "Don't have an account?"
+    : "Already have an account?";
+  document.getElementById("auth-toggle-link").textContent = isLogin
+    ? "Sign Up"
+    : "Sign In";
+}
+
+document.getElementById("auth-form").addEventListener("submit", async () => {
+  const username = document.getElementById("auth-username").value.trim();
+  const password = document.getElementById("auth-password").value.trim();
+  if (!username || !password) {
+    toast("Please fill in all fields", "error");
+    return;
+  }
+
+  const btn = document.getElementById("auth-submit");
+  btn.disabled = true;
+  btn.textContent = "Please wait...";
+
   try {
-    const items = orderItems.map((it, i) => ({
-      productId: parseInt(it.productId) || i + 1,
-      productName: it.productName,
-      productPrice: parseFloat(it.productPrice) || 0,
-      quantity: parseInt(it.quantity) || 1,
-    }));
-    const data = {
-      items,
-      paymentMethod: document.getElementById("paymentMethod").value,
-      paymentCurrency: document.getElementById("paymentCurrency").value,
-    };
-    const res = await apiCall(`${API_BASE}/orders`, {
+    if (authMode === "register") {
+      const regResult = await api("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+      });
+      if (regResult === null) return; // error already shown by api()
+      toast("Account created! Logging in...", "success");
+    }
+    // Login
+    const data = await api("/auth/login", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ username, password }),
     });
-    showToast("Order created!", "success");
-    const orderId = res.orderId || res.id || "";
-    if (orderId) document.getElementById("lookupOrderId").value = orderId;
-    orderItems = [
-      { productId: "", productName: "", productPrice: "", quantity: 1 },
-    ];
-    renderOrderItems();
+    if (data === null) return; // error already shown by api()
+    if (data.token) {
+      setToken(data.token);
+      toast(`Welcome, ${username}!`, "success");
+      handleRoute();
+    } else {
+      // Some auth services return token differently
+      const token =
+        typeof data === "string" ? data : data.accessToken || data.jwt;
+      if (token) {
+        setToken(token);
+        toast(`Welcome, ${username}!`, "success");
+        handleRoute();
+      } else {
+        toast("Login failed — unexpected response", "error");
+      }
+    }
   } catch (err) {
-    showToast(err.message, "error");
+    toast(err.message, "error");
   } finally {
-    setLoading(btn, false);
+    btn.disabled = false;
+    btn.textContent = authMode === "login" ? "Sign In" : "Sign Up";
+  }
+});
+
+function logout() {
+  removeToken();
+  currentOrderId = null;
+  window.location.hash = "";
+  showAuth();
+}
+
+// ── Dashboard ───────────────────────────────────
+async function loadDashboard() {
+  document.getElementById("dashboard-username").textContent = getUsername();
+  // Products count (paginated response)
+  try {
+    const res = await api("/products?page=0&size=1");
+    if (res && res.page) {
+      document.getElementById("stat-products").textContent =
+        res.page.totalElements;
+    } else {
+      document.getElementById("stat-products").textContent = "—";
+    }
+  } catch {
+    document.getElementById("stat-products").textContent = "—";
+  }
+  // Profile check
+  try {
+    const profile = await api("/users/profile");
+    document.getElementById("stat-profile").textContent =
+      profile && profile.name ? "✓ Set" : "Not set";
+  } catch {
+    document.getElementById("stat-profile").textContent = "Not set";
+  }
+  document.getElementById("stat-orders").textContent = "—";
+}
+
+// ── Profile ─────────────────────────────────────
+async function loadProfile() {
+  const loading = document.getElementById("profile-loading");
+  const form = document.getElementById("profile-form");
+  loading.classList.remove("hidden");
+  form.classList.add("hidden");
+
+  try {
+    const data = await api("/users/profile");
+    if (data && data.name) {
+      profileExists = true;
+      document.getElementById("profile-name").value = data.name || "";
+      document.getElementById("profile-address").value = data.address || "";
+      document.getElementById("profile-phone").value = data.phone || "";
+      document.getElementById("profile-save-btn").textContent =
+        "Update Profile";
+    } else {
+      profileExists = false;
+      document.getElementById("profile-name").value = "";
+      document.getElementById("profile-address").value = "";
+      document.getElementById("profile-phone").value = "";
+      document.getElementById("profile-save-btn").textContent =
+        "Create Profile";
+    }
+  } catch {
+    profileExists = false;
+    document.getElementById("profile-save-btn").textContent = "Create Profile";
+  }
+
+  loading.classList.add("hidden");
+  form.classList.remove("hidden");
+}
+
+document.getElementById("profile-form").addEventListener("submit", async () => {
+  const name = document.getElementById("profile-name").value.trim();
+  const address = document.getElementById("profile-address").value.trim();
+  const phone = document.getElementById("profile-phone").value.trim();
+  if (!name || !address || !phone) {
+    toast("Please fill all fields", "error");
+    return;
+  }
+
+  try {
+    if (profileExists) {
+      await api("/users/profile", {
+        method: "PUT",
+        body: JSON.stringify({ name, address, phone }),
+      });
+      toast("Profile updated!", "success");
+    } else {
+      await api("/users/profile", {
+        method: "POST",
+        body: JSON.stringify({ name, address, phone }),
+      });
+      profileExists = true;
+      document.getElementById("profile-save-btn").textContent =
+        "Update Profile";
+      toast("Profile created!", "success");
+    }
+  } catch (err) {
+    toast(err.message, "error");
+  }
+});
+
+// ── Products ────────────────────────────────────
+async function loadProducts(page = productsPage) {
+  productsPage = page;
+  const loading = document.getElementById("products-loading");
+  const grid = document.getElementById("products-grid");
+  const empty = document.getElementById("products-empty");
+  const pagination = document.getElementById("products-pagination");
+  loading.classList.remove("hidden");
+  grid.classList.add("hidden");
+  empty.classList.add("hidden");
+  pagination.classList.add("hidden");
+
+  try {
+    const res = await api(`/products?page=${page}&size=${productsSize}`);
+    if (!res) {
+      empty.classList.remove("hidden");
+      loading.classList.add("hidden");
+      return;
+    }
+
+    const products = res.content || [];
+    const pageInfo = res.page || {};
+
+    if (products.length > 0) {
+      grid.innerHTML = products
+        .map(
+          (p, i) => `
+        <div class="product-card" style="animation-delay:${i * 0.05}s" onclick="viewProduct(${p.id})">
+          <div class="product-name">${escapeHtml(p.name)}</div>
+          <div class="product-desc">${escapeHtml(p.description || "")}</div>
+          <div class="product-meta">
+            <span class="product-price">${formatPrice(p.price)}</span>
+            <span class="product-qty">Qty: ${p.quantity ?? "—"}</span>
+          </div>
+        </div>
+      `,
+        )
+        .join("");
+      grid.classList.remove("hidden");
+
+      // Render pagination
+      const totalPages = pageInfo.totalPages || 1;
+      if (totalPages > 1) {
+        renderPagination(pagination, page, totalPages);
+        pagination.classList.remove("hidden");
+      }
+    } else {
+      empty.classList.remove("hidden");
+    }
+  } catch (err) {
+    toast(err.message, "error");
+    empty.classList.remove("hidden");
+  }
+
+  loading.classList.add("hidden");
+}
+
+function renderPagination(container, current, totalPages) {
+  let html = "";
+  // Previous btn
+  html += `<button class="btn btn-outline btn-sm" ${current === 0 ? "disabled" : ""} onclick="loadProducts(${current - 1})">‹ Prev</button>`;
+  // Page numbers
+  for (let i = 0; i < totalPages; i++) {
+    if (
+      totalPages > 7 &&
+      i > 1 &&
+      i < totalPages - 2 &&
+      Math.abs(i - current) > 1
+    ) {
+      if (html.slice(-3) !== "...")
+        html += '<span class="pagination-dots">…</span>';
+      continue;
+    }
+    html += `<button class="btn btn-sm ${i === current ? "btn-primary" : "btn-outline"}" onclick="loadProducts(${i})">${i + 1}</button>`;
+  }
+  // Next btn
+  html += `<button class="btn btn-outline btn-sm" ${current >= totalPages - 1 ? "disabled" : ""} onclick="loadProducts(${current + 1})">Next ›</button>`;
+  container.innerHTML = html;
+}
+
+async function createProduct() {
+  const name = document.getElementById("product-name").value.trim();
+  const description = document.getElementById("product-desc").value.trim();
+  const price = parseFloat(document.getElementById("product-price").value);
+  const quantity = parseInt(document.getElementById("product-qty").value, 10);
+
+  if (!name || isNaN(price) || isNaN(quantity)) {
+    toast("Please fill all required fields", "error");
+    return;
+  }
+
+  try {
+    await api("/products", {
+      method: "POST",
+      body: JSON.stringify({ name, description, price, quantity }),
+    });
+    toast("Product created!", "success");
+    closeModal("product-modal");
+    // Reset form
+    document.getElementById("product-name").value = "";
+    document.getElementById("product-desc").value = "";
+    document.getElementById("product-price").value = "";
+    document.getElementById("product-qty").value = "";
+    loadProducts();
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+async function viewProduct(id) {
+  try {
+    const p = await api(`/products/${id}`);
+    if (p) {
+      toast(
+        `${p.name} — ${formatPrice(p.price)} (Qty: ${p.quantity ?? "—"})`,
+        "info",
+      );
+    }
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+// ── Orders ──────────────────────────────────────
+
+// Fetch all products for the order dropdown (loads all pages)
+async function fetchAllProducts() {
+  let all = [];
+  let page = 0;
+  while (true) {
+    const res = await api(`/products?page=${page}&size=100`);
+    if (!res || !res.content) break;
+    all = all.concat(res.content);
+    if (!res.page || page >= res.page.totalPages - 1) break;
+    page++;
+  }
+  allProductsCache = all;
+  return all;
+}
+
+function buildProductOptions() {
+  return (
+    '<option value="">-- Select Product --</option>' +
+    allProductsCache
+      .map(
+        (p) =>
+          `<option value="${p.id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}">${escapeHtml(p.name)} — ${formatPrice(p.price)}</option>`,
+      )
+      .join("")
+  );
+}
+
+function onProductSelect(selectEl) {
+  const row = selectEl.closest(".order-item-row");
+  const opt = selectEl.selectedOptions[0];
+  const priceInput = row.querySelector(".order-product-price");
+  if (opt && opt.value) {
+    priceInput.value = opt.dataset.price || "";
+  } else {
+    priceInput.value = "";
+  }
+}
+
+function addOrderItemRow() {
+  const container = document.getElementById("order-items-container");
+  const index = container.children.length;
+  const row = document.createElement("div");
+  row.className = "order-item-row";
+  row.innerHTML = `
+    <div class="form-group" style="flex:2">
+      ${index === 0 ? "<label>Product</label>" : ""}
+      <select class="form-control order-product-select" onchange="onProductSelect(this)" required>
+        ${buildProductOptions()}
+      </select>
+    </div>
+    <div class="form-group">
+      ${index === 0 ? "<label>Price</label>" : ""}
+      <input type="number" class="form-control order-product-price" placeholder="0.00" step="0.01" min="0" readonly required />
+    </div>
+    <div class="form-group">
+      ${index === 0 ? "<label>Qty</label>" : ""}
+      <input type="number" class="form-control order-product-qty" placeholder="1" min="1" value="1" required />
+    </div>
+    <button class="remove-item-btn" onclick="this.parentElement.remove()" ${index === 0 ? 'style="margin-top:22px"' : ""}>✕</button>
+  `;
+  container.appendChild(row);
+}
+
+async function openOrderModal() {
+  // Load products for the dropdown
+  if (allProductsCache.length === 0) {
+    toast("Loading products...", "info");
+    await fetchAllProducts();
+  }
+  document.getElementById("order-items-container").innerHTML = "";
+  addOrderItemRow();
+  openModal("order-modal");
+}
+
+async function createOrder() {
+  const rows = document.querySelectorAll(".order-item-row");
+  if (rows.length === 0) {
+    toast("Add at least one item", "error");
+    return;
+  }
+
+  const items = [];
+  for (const row of rows) {
+    const select = row.querySelector(".order-product-select");
+    const productId = parseInt(select.value, 10);
+    const opt = select.selectedOptions[0];
+    const productName = opt ? opt.dataset.name : "";
+    const productPrice = parseFloat(
+      row.querySelector(".order-product-price").value,
+    );
+    const quantity = parseInt(
+      row.querySelector(".order-product-qty").value,
+      10,
+    );
+    if (!productId || isNaN(productPrice) || isNaN(quantity)) {
+      toast("Please select a product and fill quantity", "error");
+      return;
+    }
+    items.push({ productId, productName, productPrice, quantity });
+  }
+
+  const paymentMethod = document.getElementById("order-payment-method").value;
+  const paymentCurrency = document.getElementById("order-currency").value;
+
+  try {
+    const order = await api("/orders", {
+      method: "POST",
+      body: JSON.stringify({ items, paymentMethod, paymentCurrency }),
+    });
+    toast("Order created!", "success");
+    closeModal("order-modal");
+    document.getElementById("order-items-container").innerHTML = "";
+    if (order && order.orderId) {
+      document.getElementById("order-lookup-id").value = order.orderId;
+      lookupOrder();
+    }
+  } catch (err) {
+    toast(err.message, "error");
   }
 }
 
 async function lookupOrder() {
-  const id = document.getElementById("lookupOrderId").value;
-  const container = document.getElementById("orderResult");
-  if (!id) {
-    showToast("Enter Order ID", "error");
+  const orderId = document.getElementById("order-lookup-id").value.trim();
+  if (!orderId) {
+    toast("Enter an order ID", "error");
     return;
   }
+
   try {
-    const order = await apiCall(`${API_BASE}/orders/customer/${id}`);
-    const items = order.items || order.orderItems || [];
-    container.innerHTML = `
-      <div class="card mt-16">
-        <div class="order-detail-grid mb-16">
-          <div class="detail-item"><div class="detail-label">Order ID</div><div class="detail-value" style="font-size:12px;word-break:break-all">${order.orderId || order.id || id}</div></div>
-          <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">${getStatusBadge(order.status || order.orderStatus || "UNKNOWN")}</div></div>
-          <div class="detail-item"><div class="detail-label">Payment</div><div class="detail-value">${order.paymentMethod || "-"} / ${order.paymentCurrency || "-"}</div></div>
-          <div class="detail-item"><div class="detail-label">Total</div><div class="detail-value">${formatPrice(order.totalAmount || order.total || 0)}</div></div>
-        </div>
-        ${
-          items.length
-            ? `<table><thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr></thead><tbody>
-          ${items.map((it) => `<tr><td>${it.productName || it.name || "-"}</td><td>${formatPrice(it.productPrice || it.price || 0)}</td><td>${it.quantity}</td><td>${formatPrice((it.productPrice || it.price || 0) * it.quantity)}</td></tr>`).join("")}
-        </tbody></table>`
-            : ""
-        }
-        <div class="actions-bar">
-          <button class="btn btn-success btn-sm" onclick="payOrder('${order.orderId || order.id || id}')">💳 Pay</button>
-          <button class="btn btn-danger btn-sm" onclick="cancelOrder('${order.orderId || order.id || id}')">✕ Cancel</button>
-          <button class="btn btn-warning btn-sm" onclick="refundOrder('${order.orderId || order.id || id}')">↩ Refund</button>
-        </div>
-      </div>`;
+    const order = await api(`/orders/customer/${orderId}`);
+    if (!order) return;
+    currentOrderId = orderId;
+    displayOrderDetail(order);
   } catch (err) {
-    container.innerHTML = `<div class="empty-state mt-16"><p>${err.message}</p></div>`;
-    showToast(err.message, "error");
+    toast(err.message, "error");
+    document.getElementById("order-detail").classList.add("hidden");
   }
 }
 
-async function payOrder(id) {
+function displayOrderDetail(order) {
+  const detail = document.getElementById("order-detail");
+  detail.classList.remove("hidden");
+
+  document.getElementById("order-detail-id").textContent =
+    order.orderId || order.id || "—";
+
+  const statusBadge = document.getElementById("order-status-badge");
+  const status = order.status || order.orderStatus || "UNKNOWN";
+  statusBadge.textContent = status;
+  statusBadge.className = "badge";
+  if (status === "PAID" || status === "COMPLETED")
+    statusBadge.classList.add("badge-success");
+  else if (status === "PENDING") statusBadge.classList.add("badge-warning");
+  else if (status === "CANCELLED" || status === "REFUNDED")
+    statusBadge.classList.add("badge-danger");
+
+  const items = order.items || order.orderItems || [];
+  const tbody = document.getElementById("order-detail-items");
+  tbody.innerHTML = items
+    .map(
+      (item) => `
+    <tr>
+      <td>${escapeHtml(item.productName || "Product")}</td>
+      <td>${formatPrice(item.productPrice || item.price || 0)}</td>
+      <td>${item.quantity}</td>
+      <td>${formatPrice((item.productPrice || item.price || 0) * item.quantity)}</td>
+    </tr>
+  `,
+    )
+    .join("");
+
+  const total = items.reduce(
+    (sum, item) => sum + (item.productPrice || item.price || 0) * item.quantity,
+    0,
+  );
+  document.getElementById("order-detail-total").textContent =
+    formatPrice(total);
+  document.getElementById("order-detail-payment").textContent =
+    `${order.paymentMethod || "—"} / ${order.paymentCurrency || "—"}`;
+}
+
+async function payOrder() {
+  if (!currentOrderId) return;
   try {
-    await apiCall(`${PAYMENT_BASE}/payments/order/${id}/pay`, {
-      method: "POST",
-    });
-    showToast("Payment successful!", "success");
+    await api(`/payments/order/${currentOrderId}/pay`, { method: "POST" });
+    toast("Payment submitted!", "success");
     lookupOrder();
   } catch (err) {
-    showToast(err.message, "error");
+    toast(err.message, "error");
   }
 }
 
-async function cancelOrder(id) {
+async function cancelOrder() {
+  if (!currentOrderId) return;
   try {
-    await apiCall(`${PAYMENT_BASE}/payments/order/${id}/cancel`, {
-      method: "POST",
-    });
-    showToast("Order cancelled", "info");
+    await api(`/payments/order/${currentOrderId}/cancel`, { method: "POST" });
+    toast("Order cancelled", "success");
     lookupOrder();
   } catch (err) {
-    showToast(err.message, "error");
+    toast(err.message, "error");
   }
 }
 
-async function refundOrder(id) {
+async function refundOrder() {
+  if (!currentOrderId) return;
   try {
-    await apiCall(`${PAYMENT_BASE}/payments/order/${id}/refund`, {
-      method: "POST",
-    });
-    showToast("Refund initiated", "success");
+    await api(`/payments/order/${currentOrderId}/refund`, { method: "POST" });
+    toast("Refund initiated", "success");
     lookupOrder();
   } catch (err) {
-    showToast(err.message, "error");
+    toast(err.message, "error");
   }
 }
 
-// ===== Init =====
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".nav-item").forEach((el) => {
-    el.addEventListener("click", () => navigate(el.dataset.page));
-  });
-  renderOrderItems();
-  if (state.token) {
-    navigate("products");
-  } else {
-    navigate("auth");
-  }
-  updateUserBar();
-});
+// ── Utilities ───────────────────────────────────
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatPrice(n) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "THB",
+    minimumFractionDigits: 2,
+  }).format(n || 0);
+}
+
+// ── Init ────────────────────────────────────────
+function init() {
+  initTheme();
+  window.addEventListener("hashchange", handleRoute);
+  handleRoute();
+}
+
+document.addEventListener("DOMContentLoaded", init);

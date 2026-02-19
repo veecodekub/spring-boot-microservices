@@ -2,236 +2,347 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Microservices Dashboard — Manage products, orders, and users" />
     <title>Microservices Dashboard</title>
-    <meta name="description" content="Admin dashboard for Spring Boot Microservices platform">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
 </head>
 
 <body>
-    <div id="toastContainer" class="toast-container"></div>
 
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <div class="logo-icon">⚡</div>
-                <div>
-                    <h1>MicroHub</h1>
-                    <div class="subtitle">Service Dashboard</div>
-                </div>
-            </div>
-            <nav>
-                <div class="nav-section">
-                    <div class="nav-section-title">Authentication</div>
-                    <div class="nav-item" data-page="auth"><span class="icon">🔐</span> Auth</div>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-section-title">Management</div>
-                    <div class="nav-item" data-page="profile"><span class="icon">👤</span> User Profile</div>
-                    <div class="nav-item" data-page="products"><span class="icon">📦</span> Products</div>
-                    <div class="nav-item" data-page="orders"><span class="icon">🛒</span> Orders</div>
-                </div>
-            </nav>
-        </aside>
+    <!-- ==================== AUTH PAGE ==================== -->
+    <div id="auth-page" class="auth-page active">
+        <div class="auth-card">
+            <h1 id="auth-title">Sign In</h1>
+            <p class="subtitle" id="auth-subtitle">Welcome back to your dashboard</p>
 
-        <!-- Main -->
-        <main class="main-content">
-            <div id="userBar" class="user-bar" style="display:none"></div>
+            <form id="auth-form" onsubmit="return false">
+                <div class="form-group">
+                    <label for="auth-username">Username</label>
+                    <input type="text" id="auth-username" class="form-control" placeholder="Enter username"
+                        autocomplete="username" required />
+                </div>
+                <div class="form-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" class="form-control" placeholder="Enter password"
+                        autocomplete="current-password" required />
+                </div>
+                <button type="submit" id="auth-submit" class="btn btn-primary btn-block">Sign In</button>
+            </form>
 
-            <!-- AUTH PAGE -->
-            <div id="page-auth" class="section-page active">
-                <div class="page-header">
-                    <h2>🔐 Authentication</h2>
-                    <p>Register a new account or login to your existing one</p>
-                </div>
-                <div class="auth-container">
-                    <div class="auth-tabs">
-                        <div class="auth-tab active" data-auth-tab="login" onclick="switchAuthTab('login')">Login</div>
-                        <div class="auth-tab" data-auth-tab="register" onclick="switchAuthTab('register')">Register
-                        </div>
-                    </div>
-                    <!-- Login -->
-                    <form id="form-login" class="auth-form active card" onsubmit="handleLogin(event)">
-                        <div class="card-header"><span class="card-title">Welcome Back</span></div>
-                        <div class="form-group">
-                            <label for="loginUsername">Username</label>
-                            <input id="loginUsername" class="form-control" placeholder="Enter username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="loginPassword">Password</label>
-                            <input id="loginPassword" class="form-control" type="password" placeholder="Enter password"
-                                required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block mt-16">Login →</button>
-                    </form>
-                    <!-- Register -->
-                    <form id="form-register" class="auth-form card" onsubmit="handleRegister(event)">
-                        <div class="card-header"><span class="card-title">Create Account</span></div>
-                        <div class="form-group">
-                            <label for="regUsername">Username</label>
-                            <input id="regUsername" class="form-control" placeholder="Choose a username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="regPassword">Password</label>
-                            <input id="regPassword" class="form-control" type="password" placeholder="Min 8 characters"
-                                required minlength="8">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block mt-16">Register →</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- PROFILE PAGE -->
-            <div id="page-profile" class="section-page">
-                <div class="page-header">
-                    <h2>👤 User Profile</h2>
-                    <p>Manage your profile information</p>
-                </div>
-                <div class="grid-2">
-                    <div>
-                        <div class="card mb-24">
-                            <div class="card-header">
-                                <span class="card-title">Create Profile</span>
-                            </div>
-                            <form onsubmit="handleCreateProfile(event)">
-                                <div class="form-group"><label>Name</label><input id="profileName" class="form-control"
-                                        placeholder="Full name" required></div>
-                                <div class="form-group"><label>Address</label><input id="profileAddress"
-                                        class="form-control" placeholder="Address" required></div>
-                                <div class="form-group"><label>Phone</label><input id="profilePhone"
-                                        class="form-control" placeholder="Phone" required></div>
-                                <button type="submit" class="btn btn-primary btn-block mt-16">Create Profile</button>
-                            </form>
-                        </div>
-                        <div class="card">
-                            <div class="card-header">
-                                <span class="card-title">Update Profile</span>
-                            </div>
-                            <form onsubmit="handleUpdateProfile(event)">
-                                <div class="form-group"><label>Name</label><input id="editName" class="form-control"
-                                        placeholder="Name"></div>
-                                <div class="form-group"><label>Address</label><input id="editAddress"
-                                        class="form-control" placeholder="Address"></div>
-                                <div class="form-group"><label>Phone</label><input id="editPhone" class="form-control"
-                                        placeholder="Phone"></div>
-                                <button type="submit" class="btn btn-success btn-block mt-16">Update Profile</button>
-                            </form>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="card">
-                            <div class="card-header">
-                                <span class="card-title">Current Profile</span>
-                                <button class="btn btn-outline btn-sm" onclick="loadProfile()">🔄 Load</button>
-                            </div>
-                            <div id="profileResult">
-                                <div class="empty-state">
-                                    <div class="empty-icon">👤</div>
-                                    <p>Click "Load" to fetch your profile</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PRODUCTS PAGE -->
-            <div id="page-products" class="section-page">
-                <div class="page-header">
-                    <h2>📦 Products</h2>
-                    <p>Browse and manage the product catalog</p>
-                </div>
-                <div class="grid-2 mb-24">
-                    <div class="card">
-                        <div class="card-header"><span class="card-title">Add Product</span></div>
-                        <form onsubmit="handleCreateProduct(event)">
-                            <div class="form-group"><label>Name</label><input id="prodName" class="form-control"
-                                    placeholder="Product name" required></div>
-                            <div class="form-group"><label>Description</label><textarea id="prodDesc"
-                                    class="form-control" placeholder="Description"></textarea></div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Price (THB)</label><input id="prodPrice"
-                                        class="form-control" type="number" step="0.01" placeholder="0.00" required>
-                                </div>
-                                <div class="form-group"><label>Quantity</label><input id="prodQty" class="form-control"
-                                        type="number" min="0" value="1" required></div>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block mt-16">➕ Add Product</button>
-                        </form>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><span class="card-title">Search by ID</span></div>
-                        <div class="flex gap-10">
-                            <input id="searchProductId" class="form-control" placeholder="Product ID" style="flex:1">
-                            <button class="btn btn-primary" onclick="searchProduct()">🔍</button>
-                        </div>
-                        <div id="searchProductResult" class="mt-16"></div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">All Products</span>
-                        <button class="btn btn-outline btn-sm" onclick="loadProducts()">🔄 Refresh</button>
-                    </div>
-                    <div id="productsGrid" class="product-grid">
-                        <div class="empty-state">
-                            <div class="empty-icon">📦</div>
-                            <p>Loading products...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ORDERS PAGE -->
-            <div id="page-orders" class="section-page">
-                <div class="page-header">
-                    <h2>🛒 Orders</h2>
-                    <p>Create and manage customer orders</p>
-                </div>
-                <div class="grid-2">
-                    <div class="card">
-                        <div class="card-header"><span class="card-title">Create Order</span></div>
-                        <form onsubmit="handleCreateOrder(event)">
-                            <label style="font-size:13px;font-weight:500;color:var(--text-secondary)">Order
-                                Items</label>
-                            <div id="orderItemsList" class="order-items-list mt-16"></div>
-                            <button type="button" class="btn btn-outline btn-sm mb-16" onclick="addOrderItem()">＋ Add
-                                Item</button>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Payment Method</label>
-                                    <select id="paymentMethod" class="form-control">
-                                        <option value="PROMPT_PAY">PromptPay</option>
-                                        <option value="CREDIT_CARD">Credit Card</option>
-                                        <option value="BANK_TRANSFER">Bank Transfer</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Currency</label>
-                                    <select id="paymentCurrency" class="form-control">
-                                        <option value="THB">THB</option>
-                                        <option value="USD">USD</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block mt-16">🛒 Place Order</button>
-                        </form>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><span class="card-title">Lookup Order</span></div>
-                        <div class="flex gap-10">
-                            <input id="lookupOrderId" class="form-control" placeholder="Order ID (UUID)" style="flex:1">
-                            <button class="btn btn-primary" onclick="lookupOrder()">🔍</button>
-                        </div>
-                        <div id="orderResult"></div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+            <p class="auth-toggle">
+                <span id="auth-toggle-text">Don't have an account?</span>
+                <a id="auth-toggle-link" onclick="toggleAuthMode()">Sign Up</a>
+            </p>
+        </div>
     </div>
+
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="main-app" class="hidden">
+
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a class="navbar-brand" href="#dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    Microservices
+                </a>
+                <ul class="navbar-nav">
+                    <li><a href="#dashboard" data-page="dashboard" onclick="navigateTo('dashboard')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7" rx="1" />
+                                <rect x="14" y="3" width="7" height="7" rx="1" />
+                                <rect x="3" y="14" width="7" height="7" rx="1" />
+                                <rect x="14" y="14" width="7" height="7" rx="1" />
+                            </svg>
+                            Dashboard
+                        </a></li>
+                    <li><a href="#profile" data-page="profile" onclick="navigateTo('profile')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Profile
+                        </a></li>
+                    <li><a href="#products" data-page="products" onclick="navigateTo('products')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                                <line x1="12" y1="22.08" x2="12" y2="12" />
+                            </svg>
+                            Products
+                        </a></li>
+                    <li><a href="#orders" data-page="orders" onclick="navigateTo('orders')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                                <line x1="3" y1="6" x2="21" y2="6" />
+                                <path d="M16 10a4 4 0 01-8 0" />
+                            </svg>
+                            Orders
+                        </a></li>
+                </ul>
+                <div class="navbar-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"
+                        id="theme-toggle-btn">🌙</button>
+                    <button class="btn btn-outline btn-sm" onclick="logout()" id="logout-btn">Sign Out</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="app-container">
+
+            <!-- ===== DASHBOARD ===== -->
+            <div id="page-dashboard" class="page active">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <p>Welcome back, <span id="dashboard-username"></span></p>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="label">Products</div>
+                        <div class="value" id="stat-products">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Orders</div>
+                        <div class="value" id="stat-orders">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Profile</div>
+                        <div class="value" id="stat-profile">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Status</div>
+                        <div class="value">●&nbsp;Online</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Quick Actions</h2>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="navigateTo('products')">Browse Products</button>
+                            <button class="btn btn-outline" onclick="navigateTo('orders')">View Orders</button>
+                            <button class="btn btn-outline" onclick="navigateTo('profile')">Edit Profile</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== PROFILE ===== -->
+            <div id="page-profile" class="page">
+                <div class="page-header">
+                    <h1>Profile</h1>
+                    <p>Manage your personal information</p>
+                </div>
+                <div class="card" style="max-width: 560px;">
+                    <div id="profile-loading" class="loading-overlay">
+                        <div class="spinner"></div>
+                    </div>
+                    <form id="profile-form" onsubmit="return false" class="hidden">
+                        <div class="form-group">
+                            <label for="profile-name">Name</label>
+                            <input type="text" id="profile-name" class="form-control" placeholder="Your name"
+                                required />
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-address">Address</label>
+                            <input type="text" id="profile-address" class="form-control" placeholder="Your address"
+                                required />
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-phone">Phone</label>
+                            <input type="text" id="profile-phone" class="form-control" placeholder="Your phone number"
+                                required />
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" id="profile-save-btn" class="btn btn-primary">Save Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ===== PRODUCTS ===== -->
+            <div id="page-products" class="page">
+                <div class="page-header flex-between">
+                    <div>
+                        <h1>Products</h1>
+                        <p>Browse and manage your product catalog</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('product-modal')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Add Product
+                    </button>
+                </div>
+                <div id="products-loading" class="loading-overlay">
+                    <div class="spinner"></div>
+                </div>
+                <div id="products-grid" class="section-grid hidden"></div>
+                <div id="products-empty" class="empty-state hidden">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path
+                            d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                    </svg>
+                    <h3>No products yet</h3>
+                    <p>Create your first product to get started</p>
+                </div>
+                <div id="products-pagination" class="pagination hidden"></div>
+            </div>
+
+            <!-- ===== ORDERS ===== -->
+            <div id="page-orders" class="page">
+                <div class="page-header flex-between">
+                    <div>
+                        <h1>Orders</h1>
+                        <p>Manage your orders and payments</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openOrderModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        New Order
+                    </button>
+                </div>
+
+                <!-- Lookup Order -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h2>Lookup Order</h2>
+                    </div>
+                    <div class="flex gap-1">
+                        <input type="text" id="order-lookup-id" class="form-control" placeholder="Enter Order ID (UUID)"
+                            style="flex:1" />
+                        <button class="btn btn-primary" onclick="lookupOrder()">Search</button>
+                    </div>
+                </div>
+
+                <!-- Order Detail -->
+                <div id="order-detail" class="card mb-3 hidden">
+                    <div class="card-header">
+                        <h2>Order Detail</h2>
+                        <span class="badge" id="order-status-badge"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-sm text-muted">Order ID: </span>
+                        <strong id="order-detail-id" class="text-sm"></strong>
+                    </div>
+                    <div class="table-container mb-2">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-detail-items"></tbody>
+                        </table>
+                    </div>
+                    <div class="flex-between mb-2">
+                        <span class="text-sm text-muted">Payment</span>
+                        <span id="order-detail-payment" class="text-sm"></span>
+                    </div>
+                    <div class="flex-between mb-3">
+                        <strong>Total</strong>
+                        <strong id="order-detail-total"></strong>
+                    </div>
+                    <div class="btn-group" id="order-actions">
+                        <button class="btn btn-success btn-sm" onclick="payOrder()">💳 Pay</button>
+                        <button class="btn btn-danger btn-sm" onclick="cancelOrder()">✕ Cancel</button>
+                        <button class="btn btn-outline btn-sm" onclick="refundOrder()">↩ Refund</button>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /app-container -->
+    </div><!-- /main-app -->
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Create Product Modal -->
+    <div id="product-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('product-modal')">
+        <div class="modal">
+            <h2>Create Product</h2>
+            <form onsubmit="return false">
+                <div class="form-group">
+                    <label for="product-name">Product Name</label>
+                    <input type="text" id="product-name" class="form-control" placeholder="e.g. Macbook Pro 16"
+                        required />
+                </div>
+                <div class="form-group">
+                    <label for="product-desc">Description</label>
+                    <textarea id="product-desc" class="form-control" placeholder="Product description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Price</label>
+                    <input type="number" id="product-price" class="form-control" placeholder="0.00" step="0.01" min="0"
+                        required />
+                </div>
+                <div class="form-group">
+                    <label for="product-qty">Quantity</label>
+                    <input type="number" id="product-qty" class="form-control" placeholder="1" min="0" required />
+                </div>
+                <div class="btn-group mt-2">
+                    <button class="btn btn-primary" onclick="createProduct()">Create</button>
+                    <button class="btn btn-outline" onclick="closeModal('product-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Order Modal -->
+    <div id="order-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('order-modal')">
+        <div class="modal">
+            <h2>Create Order</h2>
+            <form onsubmit="return false">
+                <div id="order-items-container">
+                    <!-- dynamic order item rows -->
+                </div>
+                <button class="btn btn-outline btn-sm mt-1 mb-2" onclick="addOrderItemRow()">+ Add Item</button>
+                <div class="form-group">
+                    <label for="order-payment-method">Payment Method</label>
+                    <select id="order-payment-method" class="form-control">
+                        <option value="PROMPT_PAY">Prompt Pay</option>
+                        <option value="CREDIT_CARD">Credit Card</option>
+                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="order-currency">Currency</label>
+                    <select id="order-currency" class="form-control">
+                        <option value="THB">THB</option>
+                        <option value="USD">USD</option>
+                    </select>
+                </div>
+                <div class="btn-group mt-2">
+                    <button class="btn btn-primary" onclick="createOrder()">Place Order</button>
+                    <button class="btn btn-outline" onclick="closeModal('order-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
 
     <script src="app.js"></script>
 </body>
