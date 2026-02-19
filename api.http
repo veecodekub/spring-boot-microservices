@@ -8,6 +8,7 @@ POST http://localhost:8080/auth/register
 Content-Type: application/json
 
 {
+    "role": "ROLE_USER",
     "username": "user12",
     "password": "12345678"
 }

@@ -564,6 +564,49 @@ tbody tr:hover {
     background: rgba(220, 38, 38, 0.08);
 }
 
+/* --- Role Badge --- */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-radius: 999px;
+    transition: all var(--transition);
+    cursor: default;
+    white-space: nowrap;
+}
+
+.role-badge:hover {
+    transform: scale(1.05);
+}
+
+.role-admin {
+    background: linear-gradient(135deg, #7c3aed, #c026d3);
+    color: #fff;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.role-user {
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: #fff;
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="dark"] .role-admin {
+    background: linear-gradient(135deg, #9333ea, #d946ef);
+    box-shadow: 0 2px 12px rgba(147, 51, 234, 0.35);
+}
+
+[data-theme="dark"] .role-user {
+    background: linear-gradient(135deg, #3b82f6, #22d3ee);
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
+}
+
 /* --- Toast --- */
 .toast-container {
     position: fixed;

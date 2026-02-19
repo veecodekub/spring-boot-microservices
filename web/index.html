@@ -30,6 +30,13 @@
                     <input type="password" id="auth-password" class="form-control" placeholder="Enter password"
                         autocomplete="current-password" required />
                 </div>
+                <div class="form-group" id="auth-role-group" style="display:none">
+                    <label for="auth-role">Role</label>
+                    <select id="auth-role" class="form-control">
+                        <option value="ROLE_USER">User</option>
+                        <option value="ROLE_ADMIN">Admin</option>
+                    </select>
+                </div>
                 <button type="submit" id="auth-submit" class="btn btn-primary btn-block">Sign In</button>
             </form>
 
@@ -93,6 +100,7 @@
                         </a></li>
                 </ul>
                 <div class="navbar-actions">
+                    <span id="navbar-role-badge" class="role-badge role-user">USER</span>
                     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"
                         id="theme-toggle-btn">🌙</button>
                     <button class="btn btn-outline btn-sm" onclick="logout()" id="logout-btn">Sign Out</button>
@@ -122,8 +130,8 @@
                         <div class="value" id="stat-profile">—</div>
                     </div>
                     <div class="stat-card">
-                        <div class="label">Status</div>
-                        <div class="value">●&nbsp;Online</div>
+                        <div class="label">Role</div>
+                        <div class="value" id="stat-role">—</div>
                     </div>
                 </div>
 
@@ -181,7 +189,7 @@
                         <h1>Products</h1>
                         <p>Browse and manage your product catalog</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openModal('product-modal')">
+                    <button class="btn btn-primary" onclick="openModal('product-modal')" data-role="ROLE_ADMIN">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <line x1="12" y1="5" x2="12" y2="19" />

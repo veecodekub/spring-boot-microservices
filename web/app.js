@@ -43,6 +43,38 @@ function isLoggedIn() {
   return !!getToken();
 }
 
+function getUserRoles() {
+  const token = getToken();
+  if (!token) return [];
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const scope = payload.scope || "";
+    return scope.split(" ").filter((s) => s.startsWith("ROLE_"));
+  } catch {
+    return [];
+  }
+}
+
+function hasRole(role) {
+  return getUserRoles().includes(role);
+}
+
+function isAdmin() {
+  return hasRole("ROLE_ADMIN");
+}
+
+function applyRoleVisibility() {
+  const roles = getUserRoles();
+  document.querySelectorAll("[data-role]").forEach((el) => {
+    const requiredRole = el.getAttribute("data-role");
+    if (roles.includes(requiredRole)) {
+      el.style.display = "";
+    } else {
+      el.style.display = "none";
+    }
+  });
+}
+
 // ── API Helper ──────────────────────────────────
 async function api(path, options = {}, base = API_BASE) {
   const url = `${base}${path}`;
@@ -206,6 +238,19 @@ function showApp() {
   document.getElementById("auth-page").classList.remove("active");
   document.getElementById("main-app").classList.remove("hidden");
   document.getElementById("dashboard-username").textContent = getUsername();
+
+  // Display role badge in navbar
+  const roles = getUserRoles();
+  const roleLabel =
+    roles.map((r) => r.replace("ROLE_", "")).join(", ") || "USER";
+  const navbarRoleBadge = document.getElementById("navbar-role-badge");
+  if (navbarRoleBadge) {
+    navbarRoleBadge.textContent = roleLabel;
+    navbarRoleBadge.className =
+      "role-badge" + (isAdmin() ? " role-admin" : " role-user");
+  }
+
+  applyRoleVisibility();
 }
 
 // ── Auth ────────────────────────────────────────
@@ -227,6 +272,9 @@ function toggleAuthMode() {
   document.getElementById("auth-toggle-link").textContent = isLogin
     ? "Sign Up"
     : "Sign In";
+  document.getElementById("auth-role-group").style.display = isLogin
+    ? "none"
+    : "";
 }
 
 document.getElementById("auth-form").addEventListener("submit", async () => {
@@ -243,9 +291,10 @@ document.getElementById("auth-form").addEventListener("submit", async () => {
 
   try {
     if (authMode === "register") {
+      const role = document.getElementById("auth-role").value;
       const regResult = await api("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ role, username, password }),
       });
       if (regResult === null) return; // error already shown by api()
       toast("Account created! Logging in...", "success");
@@ -290,6 +339,14 @@ function logout() {
 // ── Dashboard ───────────────────────────────────
 async function loadDashboard() {
   document.getElementById("dashboard-username").textContent = getUsername();
+  // Show role in stat card
+  const roles = getUserRoles();
+  const roleLabel =
+    roles.map((r) => r.replace("ROLE_", "")).join(", ") || "USER";
+  const statRole = document.getElementById("stat-role");
+  if (statRole) {
+    statRole.innerHTML = `<span class="role-badge ${isAdmin() ? "role-admin" : "role-user"}">${roleLabel}</span>`;
+  }
   // Products count (paginated response)
   try {
     const res = await api("/products?page=0&size=1");
@@ -311,14 +368,18 @@ async function loadDashboard() {
     document.getElementById("stat-profile").textContent = "Not set";
   }
   document.getElementById("stat-orders").textContent = "—";
-  // Orders count
-  try {
-    const ores = await api("/orders/me?page=0&size=1");
-    if (ores && ores.page) {
-      document.getElementById("stat-orders").textContent =
-        ores.page.totalElements;
-    }
-  } catch {}
+  // Orders count (skip for admin)
+  if (!isAdmin()) {
+    try {
+      const ores = await api("/orders/me?page=0&size=1");
+      if (ores) {
+        const total = ores.page?.totalElements ?? ores.totalElements ?? null;
+        if (total !== null) {
+          document.getElementById("stat-orders").textContent = total;
+        }
+      }
+    } catch {}
+  }
 }
 
 // ── Profile ─────────────────────────────────────
@@ -328,27 +389,11 @@ async function loadProfile() {
   loading.classList.remove("hidden");
   form.classList.add("hidden");
 
-  try {
-    const data = await api("/users/profile");
-    if (data && data.name) {
-      profileExists = true;
-      document.getElementById("profile-name").value = data.name || "";
-      document.getElementById("profile-address").value = data.address || "";
-      document.getElementById("profile-phone").value = data.phone || "";
-      document.getElementById("profile-save-btn").textContent =
-        "Update Profile";
-    } else {
-      profileExists = false;
-      document.getElementById("profile-name").value = "";
-      document.getElementById("profile-address").value = "";
-      document.getElementById("profile-phone").value = "";
-      document.getElementById("profile-save-btn").textContent =
-        "Create Profile";
-    }
-  } catch {
-    profileExists = false;
-    document.getElementById("profile-save-btn").textContent = "Create Profile";
-  }
+  const data = await api("/users/profile");
+  document.getElementById("profile-name").value = data.name || "";
+  document.getElementById("profile-address").value = data.address || "";
+  document.getElementById("profile-phone").value = data.phone || "";
+  document.getElementById("profile-save-btn").textContent = "Update Profile";
 
   loading.classList.add("hidden");
   form.classList.remove("hidden");
@@ -364,22 +409,11 @@ document.getElementById("profile-form").addEventListener("submit", async () => {
   }
 
   try {
-    if (profileExists) {
-      await api("/users/profile", {
-        method: "PUT",
-        body: JSON.stringify({ name, address, phone }),
-      });
-      toast("Profile updated!", "success");
-    } else {
-      await api("/users/profile", {
-        method: "POST",
-        body: JSON.stringify({ name, address, phone }),
-      });
-      profileExists = true;
-      document.getElementById("profile-save-btn").textContent =
-        "Update Profile";
-      toast("Profile created!", "success");
-    }
+    await api("/users/profile", {
+      method: "PUT",
+      body: JSON.stringify({ name, address, phone }),
+    });
+    toast("Profile updated!", "success");
   } catch (err) {
     toast(err.message, "error");
   }
@@ -591,6 +625,7 @@ async function openOrderModal() {
 
 // ── My Orders List ──────────────────────────────
 async function loadMyOrders(page = ordersPage) {
+  if (isAdmin()) return;
   ordersPage = page;
   const loading = document.getElementById("my-orders-loading");
   const table = document.getElementById("my-orders-table");

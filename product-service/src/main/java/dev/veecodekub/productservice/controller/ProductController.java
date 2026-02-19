@@ -30,13 +30,11 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
     public ProductResponse getProductById(@PathVariable Long id) {
         return productService.getProductById(id);
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
     public Page<ProductResponse> getProducts(Pageable pageable) {
         return productService.getProducts(pageable);
     }

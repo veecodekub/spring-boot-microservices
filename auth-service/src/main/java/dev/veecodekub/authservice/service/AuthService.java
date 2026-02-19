@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import dev.veecodekub.authservice.dto.LoginRequest;
 import dev.veecodekub.authservice.dto.RegisterRequest;
 import dev.veecodekub.authservice.dto.TokenResponse;
-import dev.veecodekub.authservice.enumerate.Roles;
 import dev.veecodekub.authservice.model.AuthUser;
 import dev.veecodekub.authservice.repository.AuthUserRepository;
 import dev.veecodekub.common.error.BusinessException;
@@ -44,7 +43,7 @@ public class AuthService {
         AuthUser authUser = userRepository.save(AuthUser.builder()
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
-                .roles(Collections.singleton(Roles.ROLE_USER.name()))
+                .roles(Collections.singleton(request.role()))
                 .build());
 
         kafkaTemplate.send("user-created", authUser.getId());
