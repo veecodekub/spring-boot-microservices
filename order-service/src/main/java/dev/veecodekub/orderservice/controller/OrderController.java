@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,5 +54,20 @@ public class OrderController {
     public OrderResponse getOrderById(
             @PathVariable UUID orderId) {
         return orderService.getOrderById(orderId);
+    }
+
+    @GetMapping
+    public Page<OrderResponse> getOrders(
+            Pageable pageable,
+            @CurrentUserId Long userId,
+            Authentication auth) {
+
+        if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return orderService.getAllOrders(pageable);
+        }
+
+        return orderService.getOrdersByUser(
+                userId,
+                pageable);
     }
 }

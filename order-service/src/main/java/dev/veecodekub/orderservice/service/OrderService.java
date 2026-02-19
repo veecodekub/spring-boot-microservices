@@ -136,4 +136,30 @@ public class OrderService {
         log.debug("updateOrderStatus-[next]:(order saved). order: {}", order);
 
     }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getAllOrders(Pageable pageable) {
+        log.debug("getAllOrders-[next]:(fetching orders). pageable: {}", pageable);
+
+        Page<Order> orders = orderRepository.findAll(pageable);
+        log.debug("getAllOrders-[next]:(orders found). orders: {}", orders);
+
+        Page<OrderResponse> responses = orders.map(orderMapper::toOrderResponse);
+        log.debug("getAllOrders-[next]:(order responses). responses: {}", responses);
+
+        return responses;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getOrdersByUser(Long userId, Pageable pageable) {
+        log.debug("getOrdersByUser-[next]:(fetching orders). userId: {}, pageable: {}", userId, pageable);
+
+        Page<Order> orders = orderRepository.findByCustomerId(userId, pageable);
+        log.debug("getOrdersByUser-[next]:(orders found). orders: {}", orders);
+
+        Page<OrderResponse> responses = orders.map(orderMapper::toOrderResponse);
+        log.debug("getOrdersByUser-[next]:(order responses). responses: {}", responses);
+
+        return responses;
+    }
 }

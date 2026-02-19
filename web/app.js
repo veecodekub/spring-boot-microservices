@@ -10,7 +10,7 @@ let authMode = "login"; // 'login' | 'register'
 let profileExists = false;
 let currentOrderId = null;
 let productsPage = 0;
-const productsSize = 10;
+const productsSize = 9;
 let allProductsCache = []; // cache for order product dropdown
 let ordersPage = 0;
 const ordersSize = 10;
@@ -339,14 +339,6 @@ function logout() {
 // ── Dashboard ───────────────────────────────────
 async function loadDashboard() {
   document.getElementById("dashboard-username").textContent = getUsername();
-  // Show role in stat card
-  const roles = getUserRoles();
-  const roleLabel =
-    roles.map((r) => r.replace("ROLE_", "")).join(", ") || "USER";
-  const statRole = document.getElementById("stat-role");
-  if (statRole) {
-    statRole.innerHTML = `<span class="role-badge ${isAdmin() ? "role-admin" : "role-user"}">${roleLabel}</span>`;
-  }
   // Products count (paginated response)
   try {
     const res = await api("/products?page=0&size=1");
@@ -359,27 +351,18 @@ async function loadDashboard() {
   } catch {
     document.getElementById("stat-products").textContent = "—";
   }
-  // Profile check
-  try {
-    const profile = await api("/users/profile");
-    document.getElementById("stat-profile").textContent =
-      profile && profile.name ? "✓ Set" : "Not set";
-  } catch {
-    document.getElementById("stat-profile").textContent = "Not set";
-  }
+
   document.getElementById("stat-orders").textContent = "—";
-  // Orders count (skip for admin)
-  if (!isAdmin()) {
-    try {
-      const ores = await api("/orders/me?page=0&size=1");
-      if (ores) {
-        const total = ores.page?.totalElements ?? ores.totalElements ?? null;
-        if (total !== null) {
-          document.getElementById("stat-orders").textContent = total;
-        }
+  // Orders count
+  try {
+    const ores = await api("/orders?page=0&size=1");
+    if (ores) {
+      const total = ores.page?.totalElements ?? ores.totalElements ?? null;
+      if (total !== null) {
+        document.getElementById("stat-orders").textContent = total;
       }
-    } catch {}
-  }
+    }
+  } catch {}
 }
 
 // ── Profile ─────────────────────────────────────
@@ -625,7 +608,6 @@ async function openOrderModal() {
 
 // ── My Orders List ──────────────────────────────
 async function loadMyOrders(page = ordersPage) {
-  if (isAdmin()) return;
   ordersPage = page;
   const loading = document.getElementById("my-orders-loading");
   const table = document.getElementById("my-orders-table");
@@ -637,7 +619,7 @@ async function loadMyOrders(page = ordersPage) {
   pagination.classList.add("hidden");
 
   try {
-    const res = await api(`/orders/me?page=${page}&size=${ordersSize}`);
+    const res = await api(`/orders?page=${page}&size=${ordersSize}`);
     if (!res) {
       empty.classList.remove("hidden");
       loading.classList.add("hidden");
