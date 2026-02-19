@@ -1,7 +1,7 @@
 # Auth Service
 
 ### Token
-@token = eyJraWQiOiI0NzIxODhlOS1kYzRkLTQ2YWYtYmQ2OS01MmEyNmFiMjE1N2MiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ2djEyIiwidWlkIjoxLCJzY29wZSI6IlJPTEVfVVNFUiBGQUNUT1JfUEFTU1dPUkQiLCJpc3MiOiJhdXRoLXNlcnZpY2UiLCJleHAiOjE3NzE0NzMxMjIsImlhdCI6MTc3MTQ2OTUyMiwianRpIjoiZWEwMDdiNTgtZTAzMS00YWU0LTlkY2ItOTQ3OTkxNzQxZmZhIn0.MrIFTXrJ6od28-BhziPfQmxR7v1KHl2ef6OuiK_Grci3Qn_O7318MFqmzVkCrSHZuQA19Z5mAPasx-NHIzMwZcV32jqzYYIBe0BTuxBCzjEzE0j68-oVcd7W3dQrIMo1jOHkulEuQalL_u-oc-EB9Rwzbw3xk1fLcx_opNikYb2srcvGCeBkvmkGHcrfgwbBTA2U2faKzZDDGNyQfswlxPnL302tbRXJnx-CNeJ_LGaPESwMDFRN1X8VF435Tta-kIcNn4fbGv-vrCUsQr5y-GvnNg7M9WTggMbDx-6lG6SRem26K9UU-cmFE31tR_W6Q38us_OJjGjKFFJpYFk2ow
+@token = eyJraWQiOiJjZWI5YWU1Yi0wOTI2LTQ4Y2MtYTdlMC1hOGQ5MjJjZjkxOTIiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIiLCJ1aWQiOjEsInNjb3BlIjoiUk9MRV9VU0VSIEZBQ1RPUl9QQVNTV09SRCIsImlzcyI6ImF1dGgtc2VydmljZSIsImV4cCI6MTc3MTQ5MzEyNiwiaWF0IjoxNzcxNDg5NTI2LCJqdGkiOiI1OWQ1MDhjNS1kNDA4LTRkOTItODU4YS0wMmM2MGFjY2EwM2UifQ.puS-EvCR-cXkEVHWk2T_PaJJUEuc40w220dOPGoY9Cvk9dL9EZqkmviEuXoX1bpbydqF252NZg2i4FQvLi8Rg94I_FbNGUHrZXmQkvlave1ROvCgbw_kjxVimbiN8qb5N6Bm5uTMA_C4SbmRByxoyxErh4cb_T8ylp0oRmWQJ7WQiJlaaxkVNVY0LxCUrIxsul-FURsLDbgiToyBea70QaNwkZIK-zxv3tJfwljw08Ze6oL2tr5KTYsTbSnzC0eqKnb9XQmv-a1Sj9QI2NWOhoGl2mdgcK0UZxYrlTkqqFiSwu7JtAEwFHeJvOhr8oFydWIfn0nY8vh0_HVnwusDow
 
 ### Register
 POST http://localhost:8080/auth/register
@@ -23,17 +23,6 @@ Content-Type: application/json
 
 
 # User Service
-
-### Create Profile
-POST http://localhost:8080/users/profile
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-    "name": "test",
-    "address": "test",
-    "phone": "test"
-}
 
 ### Get Profile
 GET http://localhost:8080/users/profile

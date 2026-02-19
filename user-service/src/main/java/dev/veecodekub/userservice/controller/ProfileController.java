@@ -2,7 +2,6 @@ package dev.veecodekub.userservice.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,14 +24,6 @@ public class ProfileController {
     @PreAuthorize("hasRole('USER')")
     public ProfileResponse getProfile(@CurrentUserId Long userId) {
         return profileService.getProfile(userId);
-    }
-
-    @PostMapping
-    @PreAuthorize("hasRole('USER')")
-    public ProfileResponse createProfile(
-            @CurrentUserId Long userId,
-            @RequestBody ProfileRequest request) {
-        return profileService.createProfile(userId, request);
     }
 
     @PutMapping

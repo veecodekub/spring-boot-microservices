@@ -2,6 +2,7 @@ package dev.veecodekub.authservice.service;
 
 import java.util.Collections;
 
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +30,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
+    private final KafkaTemplate<String, Long> kafkaTemplate;
 
     @Transactional
     public TokenResponse register(RegisterRequest request) {
@@ -45,12 +47,14 @@ public class AuthService {
                 .roles(Collections.singleton(Roles.ROLE_USER.name()))
                 .build());
 
+        kafkaTemplate.send("user-created", authUser.getId());
+        log.debug("register-[next]:(sent user created event). userId: {}", authUser.getId());
+
         Authentication authenticate = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
         String token = tokenService.generateToken(authenticate);
         TokenResponse response = new TokenResponse(authUser.getId(), token);
-
         log.debug("register-[next]:(user registered successfully). response: {}", response);
 
         return response;

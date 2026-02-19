@@ -32,12 +32,7 @@ public class Profile {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
     private String phone;
-
-    @Column(nullable = false)
     private String address;
 }

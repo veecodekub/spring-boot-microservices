@@ -21,23 +21,6 @@ public class ProfileService {
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
 
-    @Transactional
-    public ProfileResponse createProfile(Long userId, ProfileRequest request) {
-        log.debug("createProfile-[next]:(creating profile). userId: {}, request: {}", userId, request);
-
-        if (profileRepository.existsByUserId(userId)) {
-            log.warn("createProfile-[warn]:(profile already exists). userId: {}", userId);
-            throw new BusinessException(UserErrorCode.PROFILE_ALREADY_EXISTS);
-        }
-
-        Profile profile = profileMapper.toProfile(request, userId);
-        profileRepository.save(profile);
-        ProfileResponse response = profileMapper.toProfileResponse(profile);
-        log.debug("createProfile-[next]:(profile created). response: {}", response);
-
-        return response;
-    }
-
     @Transactional(readOnly = true)
     public ProfileResponse getProfile(Long userId) {
         log.debug("getProfile-[next]:(getting profile). userId: {}", userId);
