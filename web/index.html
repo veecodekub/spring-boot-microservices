@@ -234,6 +234,36 @@
                     </div>
                 </div>
 
+                <!-- My Orders List -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h2>My Orders</h2>
+                    </div>
+                    <div id="my-orders-loading" class="loading-overlay hidden">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="my-orders-table" class="table-container hidden">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="my-orders-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="my-orders-empty" class="empty-state hidden">
+                        <h3>No orders yet</h3>
+                        <p>Place your first order to get started</p>
+                    </div>
+                    <div id="my-orders-pagination" class="pagination hidden"></div>
+                </div>
+
                 <!-- Order Detail -->
                 <div id="order-detail" class="card mb-3 hidden">
                     <div class="card-header">

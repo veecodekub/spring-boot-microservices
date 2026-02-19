@@ -12,6 +12,8 @@ let currentOrderId = null;
 let productsPage = 0;
 const productsSize = 10;
 let allProductsCache = []; // cache for order product dropdown
+let ordersPage = 0;
+const ordersSize = 10;
 
 // ── Token Management ────────────────────────────
 function getToken() {
@@ -190,7 +192,8 @@ function onPageLoad(page) {
       loadProducts();
       break;
     case "orders":
-      break; // orders are loaded on demand
+      loadMyOrders();
+      break; // also loaded on demand
   }
 }
 
@@ -308,6 +311,14 @@ async function loadDashboard() {
     document.getElementById("stat-profile").textContent = "Not set";
   }
   document.getElementById("stat-orders").textContent = "—";
+  // Orders count
+  try {
+    const ores = await api("/orders/me?page=0&size=1");
+    if (ores && ores.page) {
+      document.getElementById("stat-orders").textContent =
+        ores.page.totalElements;
+    }
+  } catch {}
 }
 
 // ── Profile ─────────────────────────────────────
@@ -431,10 +442,15 @@ async function loadProducts(page = productsPage) {
   loading.classList.add("hidden");
 }
 
-function renderPagination(container, current, totalPages) {
+function renderPagination(
+  container,
+  current,
+  totalPages,
+  fnName = "loadProducts",
+) {
   let html = "";
   // Previous btn
-  html += `<button class="btn btn-outline btn-sm" ${current === 0 ? "disabled" : ""} onclick="loadProducts(${current - 1})">‹ Prev</button>`;
+  html += `<button class="btn btn-outline btn-sm" ${current === 0 ? "disabled" : ""} onclick="${fnName}(${current - 1})">‹ Prev</button>`;
   // Page numbers
   for (let i = 0; i < totalPages; i++) {
     if (
@@ -447,10 +463,10 @@ function renderPagination(container, current, totalPages) {
         html += '<span class="pagination-dots">…</span>';
       continue;
     }
-    html += `<button class="btn btn-sm ${i === current ? "btn-primary" : "btn-outline"}" onclick="loadProducts(${i})">${i + 1}</button>`;
+    html += `<button class="btn btn-sm ${i === current ? "btn-primary" : "btn-outline"}" onclick="${fnName}(${i})">${i + 1}</button>`;
   }
   // Next btn
-  html += `<button class="btn btn-outline btn-sm" ${current >= totalPages - 1 ? "disabled" : ""} onclick="loadProducts(${current + 1})">Next ›</button>`;
+  html += `<button class="btn btn-outline btn-sm" ${current >= totalPages - 1 ? "disabled" : ""} onclick="${fnName}(${current + 1})">Next ›</button>`;
   container.innerHTML = html;
 }
 
@@ -573,6 +589,76 @@ async function openOrderModal() {
   openModal("order-modal");
 }
 
+// ── My Orders List ──────────────────────────────
+async function loadMyOrders(page = ordersPage) {
+  ordersPage = page;
+  const loading = document.getElementById("my-orders-loading");
+  const table = document.getElementById("my-orders-table");
+  const empty = document.getElementById("my-orders-empty");
+  const pagination = document.getElementById("my-orders-pagination");
+  loading.classList.remove("hidden");
+  table.classList.add("hidden");
+  empty.classList.add("hidden");
+  pagination.classList.add("hidden");
+
+  try {
+    const res = await api(`/orders/me?page=${page}&size=${ordersSize}`);
+    if (!res) {
+      empty.classList.remove("hidden");
+      loading.classList.add("hidden");
+      return;
+    }
+
+    const orders = res.content || [];
+    const pageInfo = res.page || {};
+
+    if (orders.length > 0) {
+      const tbody = document.getElementById("my-orders-body");
+      tbody.innerHTML = orders
+        .map((o) => {
+          const status = o.status || o.orderStatus || "UNKNOWN";
+          let badgeClass = "badge";
+          if (status === "PAID" || status === "COMPLETED")
+            badgeClass += " badge-success";
+          else if (status === "PENDING") badgeClass += " badge-warning";
+          else if (status === "CANCELLED" || status === "REFUNDED")
+            badgeClass += " badge-danger";
+          const itemCount = (o.items || o.orderItems || []).length;
+          return `
+          <tr>
+            <td class="text-sm" style="font-family:monospace">${(o.id || o.orderId || "—").toString().slice(0, 8)}…</td>
+            <td>${itemCount} item${itemCount !== 1 ? "s" : ""}</td>
+            <td>${formatPrice(o.total || 0)}</td>
+            <td><span class="${badgeClass}">${status}</span></td>
+            <td class="text-sm">${o.paymentMethod || "—"}</td>
+            <td><button class="btn btn-outline btn-sm" onclick="viewOrderFromList('${o.id || o.orderId}')">View</button></td>
+          </tr>
+        `;
+        })
+        .join("");
+      table.classList.remove("hidden");
+
+      const totalPages = pageInfo.totalPages || 1;
+      if (totalPages > 1) {
+        renderPagination(pagination, page, totalPages, "loadMyOrders");
+        pagination.classList.remove("hidden");
+      }
+    } else {
+      empty.classList.remove("hidden");
+    }
+  } catch (err) {
+    toast(err.message, "error");
+    empty.classList.remove("hidden");
+  }
+
+  loading.classList.add("hidden");
+}
+
+function viewOrderFromList(orderId) {
+  document.getElementById("order-lookup-id").value = orderId;
+  lookupOrder();
+}
+
 async function createOrder() {
   const rows = document.querySelectorAll(".order-item-row");
   if (rows.length === 0) {
@@ -611,6 +697,7 @@ async function createOrder() {
     toast("Order created!", "success");
     closeModal("order-modal");
     document.getElementById("order-items-container").innerHTML = "";
+    loadMyOrders(0);
     if (order && order.orderId) {
       document.getElementById("order-lookup-id").value = order.orderId;
       lookupOrder();
