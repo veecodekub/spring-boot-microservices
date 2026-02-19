@@ -21,7 +21,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "app_users", indexes = {
+@Table(name = "auth_users", indexes = {
         @Index(name = "idx_username", columnList = "username", unique = true)
 })
 @Getter
@@ -31,7 +31,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class AppUser {
+public class AuthUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

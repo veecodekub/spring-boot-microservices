@@ -5,11 +5,11 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import dev.veecodekub.authservice.model.AppUser;
+import dev.veecodekub.authservice.model.AuthUser;
 
 @Repository
-public interface AppUserRepository extends JpaRepository<AppUser, Long> {
+public interface AuthUserRepository extends JpaRepository<AuthUser, Long> {
     boolean existsByUsername(String username);
 
-    Optional<AppUser> findByUsername(String username);
+    Optional<AuthUser> findByUsername(String username);
 }

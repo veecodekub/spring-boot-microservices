@@ -8,11 +8,11 @@ import org.springframework.security.core.userdetails.User;
 import lombok.Getter;
 
 @Getter
-public class AppUserDetails extends User {
+public class AuthUserDetails extends User {
 
     private final Long id;
 
-    public AppUserDetails(Long id, String username, String password,
+    public AuthUserDetails(Long id, String username, String password,
             Collection<? extends GrantedAuthority> authorities) {
         super(username, password, authorities);
         this.id = id;

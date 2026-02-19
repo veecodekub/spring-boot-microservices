@@ -13,8 +13,8 @@ import dev.veecodekub.authservice.dto.LoginRequest;
 import dev.veecodekub.authservice.dto.RegisterRequest;
 import dev.veecodekub.authservice.dto.TokenResponse;
 import dev.veecodekub.authservice.enumerate.Roles;
-import dev.veecodekub.authservice.model.AppUser;
-import dev.veecodekub.authservice.repository.AppUserRepository;
+import dev.veecodekub.authservice.model.AuthUser;
+import dev.veecodekub.authservice.repository.AuthUserRepository;
 import dev.veecodekub.common.error.BusinessException;
 import dev.veecodekub.common.error.auth.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -25,32 +25,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthService {
 
-    private final AppUserRepository userRepository;
+    private final AuthUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
 
     @Transactional
     public TokenResponse register(RegisterRequest request) {
-        log.debug("register-[next]:(registering user). request: {}", request);
+        log.debug("register-[next]:(registering user). username: {}", request.username());
 
         if (userRepository.existsByUsername(request.username())) {
-            log.warn("register-[block]:(username already exists). request: {}", request);
+            log.warn("register-[block]:(username already exists). username: {}", request.username());
             throw new BusinessException(AuthErrorCode.USERNAME_ALREADY_EXISTS);
         }
 
-        AppUser user = AppUser.builder()
+        AuthUser authUser = userRepository.save(AuthUser.builder()
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
                 .roles(Collections.singleton(Roles.ROLE_USER.name()))
-                .build();
-        userRepository.save(user);
+                .build());
 
         Authentication authenticate = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
         String token = tokenService.generateToken(authenticate);
-        TokenResponse response = new TokenResponse(user.getId(), token);
+        TokenResponse response = new TokenResponse(authUser.getId(), token);
 
         log.debug("register-[next]:(user registered successfully). response: {}", response);
 

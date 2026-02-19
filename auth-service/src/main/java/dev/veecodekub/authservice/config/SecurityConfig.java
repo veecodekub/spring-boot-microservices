@@ -18,7 +18,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import dev.veecodekub.authservice.service.AppUserDetailsService;
+import dev.veecodekub.authservice.service.AuthUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
@@ -46,7 +46,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    AuthenticationProvider authenticationProvider(AppUserDetailsService userDetailsService) {
+    AuthenticationProvider authenticationProvider(AuthUserDetailsService userDetailsService) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
